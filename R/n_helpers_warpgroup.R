@@ -7,7 +7,7 @@ plot.wgroup = function (Nmacha, .g_den) {
 
   Group = getgroup(Nmacha, .g_den)
 
-  Group$rs[,rt.g := corrt(rt, m, Nmacha$grt)]
+  Group$rs[,rt.g := corrt(rt, Nmacha$grt[[m[1]]]),by="m"]
 
   df.rs = data.frame(Group$rs)
   df.rs$m = factor(df.rs$m)
@@ -26,9 +26,9 @@ plot.wgroup = function (Nmacha, .g_den) {
   df.ccs$m = factor(df.ccs$m)
 
   eachfile=ggplot(df.rs) + geom_line(aes(x = rt.g, y = i, group = m), colour = "grey") + geom_line(data=df.ccs, aes(x = rt, y = i, colour = factor(wg), group = cc)) + theme_nate() + facet_wrap(~m, ncol = round(length(unique(df.rs$m))/3)) + xlim(xlim)+ theme(legend.position = "none")
-  overlaycs = ggplot(df.ccs) + geom_line(aes(x = rt, y = i, colour = factor(m), group = m))  + theme_nate() + xlim(xlim)+ theme(legend.position = "none")
+  overlaycs = ggplot(df.ccs) + geom_line(aes(x = rt, y = i, colour = factor(m), group = factor(paste(cc, m))))  + theme_nate() + xlim(xlim)+ theme(legend.position = "none")
   overlay = ggplot(df.rs) + geom_line(aes(x = rt.g, y = i, colour = m, group = m)) + theme_nate() + xlim(xlim)+ theme(legend.position = "none")
-  wrapcs = ggplot(df.ccs) + geom_line(aes(x = rt, y = i, colour = factor(m), group = m)) + facet_wrap(~m, ncol = 3, scales = "free_y") + theme_nate() + xlim(xlim)+ theme(legend.position = "none")
+  wrapcs = ggplot(df.ccs[!is.na(df.ccs[,"rt"]),,drop=F]) + geom_line(aes(x = rt, y = i, colour = factor(m), group = m)) + facet_wrap(~cc, ncol = 3, scales = "free_y") + theme_nate() + xlim(xlim)+ theme(legend.position = "none")
 
   grid.arrange(arrangeGrob(overlay, overlaycs, wrapcs, ncol=1), eachfile, ncol = 2, top = paste0("Group: ",  .g_den,". Warpgroups: ", paste(collapse=", ", unique(ps$wg))))
 }

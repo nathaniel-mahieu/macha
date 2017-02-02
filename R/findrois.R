@@ -7,7 +7,7 @@
 findrois = function(features, minlength = 5, ppm = 1, rtwid = 10) {
   cat("Finding ROIs\n")
 
-  rois = features$k[features$s[,.(s,rt)],.(mz, rt, i, k, k), on="s"] %>% .[complete.cases(.),] %>% as.matrix
+  rois = features$k[features$s[,.(s,rt)],.(mz, rt, i, k, k), on="s"] %>% { .[complete.cases(.),] } %>% as.matrix
   colnames(rois)[4] = "r"
 
   gl = centroidgroups(rois, ppm = ppm, rtwid = rtwid, minlength = minlength)

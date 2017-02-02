@@ -7,7 +7,7 @@
 #' @param roi data.table. ROI
 #' @param seeds matrix. Columns "start", "end", "peak". Rows are individual initialization points for ROI fitting. Values correspond to the index within the supplied ROI.
 #' @param unrelated.dist Integer. The distance two seeds must be to fit them individually (much faster).
-#' @param min.peakwidth numeric. The minimum with a component can be to be retained. In seconds.
+#' @param min.peakwidth numeric. The minimum width a component can be to be retained. In seconds.
 #' @param sn.adjust numeric. A multiplier for the signal to noise limit of retained components. Calculated from the raw data and the supplied baseline.  Used to determine the number of observations as well.
 #' @param min.sharpness numeric. A lower limit on peak.height/peak.width.  Units Intensity/Second.
 #' @param min.fractionobs numeric. A lower limit on the fraction of expected observations present in the peak region.
@@ -67,7 +67,7 @@ fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adj
         })
 
       # Remove terrible fits
-      keeps = qc["wid",] > min.peakwidth/3 & component.mat["factor",] > 0
+      keeps = qc["wid",] > min.peakwidth/6 & component.mat["factor",] > 0
       component.mat = component.mat[,keeps,drop=F]
       if (sum(keeps) < 1) { return(NULL) }
 
@@ -114,7 +114,7 @@ fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adj
 }
 
 
-fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.upper=NULL, do.plot=F) {
+fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.upper=NULL, usebaseline = T, do.plot=F) {
 
   #if (is.null(const.lower) | is.null(const.upper)) { stop("Only one set of bounds supplied") }
 
@@ -179,6 +179,7 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
 
   y = eic[inds,"ii"] * scale.factor
   x = eic[inds,"rt"]
+  b = mean(eic[inds,"bb"],na.rm=T) * scale.factor
 
   if (do.plot) {
     plot(y, type="l")
@@ -192,7 +193,7 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
 
   if (!is.null(const.lower)) {
     const.lower = c(const.lower %>% aperm, 0)
-    const.upper = c(const.upper %>% aperm, 20)
+    const.upper = c(const.upper %>% aperm, 0.0001)
 
     opt = tryCatch(
       optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lower, upper = const.upper, control = list(factr = 1E-3, ndeps = c(rep(c(0.01, .01, .01, .01), ncol(parhat.mat)),.01))),
@@ -200,9 +201,17 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
         warning("Fitting BFGS failed in stage 2. Fell back to slow method. Unbounded!!");
         optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead")
       })
+  } else if (usebaseline) {
+    opt = tryCatch(
+      optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "BFGS", control = list(reltol = 1E-3, ndeps = c(rep(c(.5, .01, .01, .01), ncol(parhat.mat))))),
+      error = function(e) {
+        warning("Fitting BFGS failed in stage 2. Fell back to slow method.");
+        optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "Nelder-Mead")
+      })
+    opt$par = c(opt$par, b)
   } else {
     opt = tryCatch(
-      optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "BFGS", control = list(reltol = 1E-3, ndeps = c(rep(c(.5, .01, .01, .01), ncol(parhat.mat)),.01))),
+      optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "BFGS", control = list(reltol = 1E-3, ndeps = c(rep(c(.5, .01, .01, .01), ncol(parhat.mat))))),
       error = function(e) {
         warning("Fitting BFGS failed in stage 2. Fell back to slow method.");
         optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead")
@@ -268,6 +277,13 @@ fitmany = function(parvec, x, y) {
 
   yhat = parmat[4,] * suppressWarnings( dsn(rep(x, each = ncol(parmat)), xi = parmat[1,], omega = parmat[2,], alpha = parmat[3,]) )
   sum((y-colSums(matrix(yhat, nrow = ncol(parmat))) - parvec[length(parvec)])^2)
+}
+
+fitmanyb = function(parvec, x, y, b) {
+  parmat = matrix(parvec, nrow = 4)
+
+  yhat = parmat[4,] * suppressWarnings( dsn(rep(x, each = ncol(parmat)), xi = parmat[1,], omega = parmat[2,], alpha = parmat[3,]) )
+  sum((y-colSums(matrix(yhat, nrow = ncol(parmat))) - b)^2)
 }
 
 curvemany = function(parvec, x) {

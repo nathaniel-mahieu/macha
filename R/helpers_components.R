@@ -10,7 +10,9 @@ plot.components = function(macha, roin) {
   lines(roi$rt, roi$bb, col="red")
 
   span = diff(range(roi$i, na.rm=T))
-  text(peaks$rtpeak, peaks$intpeak, paste0("Scale: ", round(peaks$scale,1)), pos = 3, offset = 1, col="darkgrey")
-  text(peaks$rtpeak, peaks$intpeak, paste0("Shape: ", round(peaks$shape,1)), pos = 3, offset = 0, col="darkgrey")
-  text(peaks$rtpeak, peaks$intpeak, paste0("SN: ", round(peaks$intpeak/peaks$baseline,1)), pos = 3, offset = -1, col="darkgrey")
+  try({
+    text(peaks$rtpeak, peaks$intpeak, paste0("Scale: ", round(peaks$scale,1)), pos = 3, offset = 1, col="darkgrey")
+    text(peaks$rtpeak, peaks$intpeak, paste0("Shape: ", round(peaks$shape,1)), pos = 3, offset = 0, col="darkgrey")
+    text(peaks$rtpeak, peaks$intpeak, paste0("SN: ", round(peaks$intpeak/peaks$baseline,1)), pos = 3, offset = -1, col="darkgrey")
+  })
 }

@@ -16,7 +16,7 @@ plotgrt = function(Nmacha) {
   preps = lapply(tgs, function(.g) {
 
     Group = getgroup(Nmacha, .g)
-    Group$rs[,rt.g := corrt(rt, m, Nmacha$grt)]
+    Group$rs[,rt.g := corrt(rt, Nmacha$grt[[m[1]]]),by="m"]
 
     xlim = range(Group$cs[,.(rtmin, rtmax)])
 
@@ -54,7 +54,7 @@ plotgmz = function(Nmacha) {
 
 
   Gcs = Nmacha$m.c[Nmacha$gcs[,.(c,m)],,on=.(c,m)]
-  Gcs[,mz.g:=cormz(mz, m, Nmacha$gmz)]
+  Gcs[,mz.g:=cormz(mz, Nmacha$gmz[[m[1]]],by="m")]
 
 
   tgs = sapply(split(Gcs$g, cut(Gcs$rtpeak, 4)), sample, size=1)
@@ -62,7 +62,7 @@ plotgmz = function(Nmacha) {
   preps = lapply(tgs, function(.g) {
 
     Group = getgroup(Nmacha, .g)
-    Group$cs[,mz.g := cormz(mz, m, Nmacha$gmz)]
+    Group$cs[,mz.g := cormz(mz, Nmacha$gmz[[m[1]]], by = "m")]
 
     xlim = range(Group$cs[,.(mz, mz.g)])
 

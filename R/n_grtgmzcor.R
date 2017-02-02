@@ -1,0 +1,81 @@
+
+
+grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
+
+  tmpsize = length(Nmacha$m)
+  gcounts = Nmacha$m.c[,length(unique(m)) == length(m) & length(m) >= tmpsize*fracobs & diff(range(shape)) < shaperng, by = g]
+
+  ftg = Nmacha$m.c[gcounts[V1==T],,on="g"]
+
+
+  # Correct RTs
+  rtmat = matrix(NA, nrow = length(unique(ftg$g)), ncol = length(Nmacha$m))
+  assmat = cbind(as.numeric(factor(ftg$g)), ftg$m)
+
+  rtmat[assmat] = ftg$rtpeak
+
+  maxrt = max(Nmacha$m.c$rtmax) + 1000
+
+  rtmat = rbind(rep(-100,length(Nmacha$m)), rep(0,length(Nmacha$m)), rtmat, rep(maxrt+100, length(Nmacha$m)))
+  rtdmat =  rtmat - rowMeans(rtmat, na.rm = T)
+
+  grt = list()
+  for (coln in seq_len(ncol(rtmat))) {
+    df = data.frame(rt = rtmat[,coln], rtd = rtdmat[,coln])
+    lo  = loess(rtd ~ rt, df, degree=2, span = 0.1) # predicts = rt - mean(rt); rt - prediction = mean(rt)
+
+    #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
+
+    rtouts = seq(-2, max(Nmacha$m[[coln]]$s$rt)+2, by = mean(diff(Nmacha$m[[coln]]$s$rt))*3)
+
+    corrections = predict(lo, rtouts)
+
+    grt = c(grt, list(data.table(rt = rtouts, grt = rtouts - corrections)))
+    }
+
+
+  # Correct mzs
+  rtmat = matrix(NA, nrow = length(unique(ftg$g)), ncol = length(Nmacha$m))
+  assmat = cbind(as.numeric(factor(ftg$g)), ftg$m)
+
+  rtmat[assmat] = ftg$mz
+
+
+  maxmz = max(Nmacha$m.c$mz) + 1000
+  rtmat = rbind(rep(-100,length(Nmacha$m)),rep(0,length(Nmacha$m)),rtmat,  rep(maxmz+100, length(Nmacha$m)))
+  rtdmat =  rtmat - rowMeans(rtmat, na.rm=T)
+  #rtdmat[2,] = rtdmat[nrow(rtdmat),]
+
+  gmz = list()
+  for (coln in seq_len(ncol(rtmat))) {
+    df = data.frame(rt = rtmat[,coln], rtd = rtdmat[,coln])
+    lo  = loess(rtd ~ rt, df, degree=2, span = 0.1) # predicts = rt - mean(rt); rt - prediction = mean(rt)
+
+    #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
+
+    rtouts = seq(-2, max(Nmacha$m[[coln]]$s$rt)+2, by = mean(diff(Nmacha$m[[coln]]$s$rt))*3)
+
+    corrections = predict(lo, rtouts)
+
+    gmz = c(gmz, list(data.table(mz = rtouts, gmz = rtouts - corrections)))
+  }
+
+  Nmacha$gcs = ftg[,.(c,m,g)]
+  Nmacha$grt = grt
+  Nmacha$gmz = gmz
+  Nmacha
+}
+
+
+
+corrt = function(rt, grt, uncorrect = F) {
+  if (uncorrect) approx(grt[,.(rt, grt)], xout = rt)$y
+  else approx(grt[,.(grt, rt)], xout = rt)$y
+}
+
+cormz = function(rt, grt, uncorrect = F) {
+    if (uncorrect) approx(grt[,.(mz, gmz)], xout = rt)$y
+    else approx(grt[,.(gmz, mz)], xout = rt)$y
+}
+
+

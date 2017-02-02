@@ -21,7 +21,16 @@ plot.roi = function(roi) {
   }
 
 getroi = function(macha, roi.id) {
-  roi = macha$k[macha$k_r[r==roi.id],,on="k"][macha$k_b,,on="k", nomatch=0]
+
+  if (is.null(macha[["roi_cache"]])) {
+    warning("Set roi_cache for faster processing 'makeroicache()'.")
+
+    macha$roi_cache = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k", nomatch=0][macha$s,,on="s"]
+    setkey(macha$roi_cache, "r", "s")
+    setkey(macha$s, s)
+  }
+
+  roi = macha$roi_cache[r == roi.id]
 
   region = macha$s[s %in% min(roi$s):max(roi$s)]
 
@@ -31,4 +40,14 @@ getroi = function(macha, roi.id) {
   setkey(roi, "s")
 
   roi
+  }
+
+makeroicache = function(macha) {
+
+  macha$roi_cache = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k", nomatch=0][macha$s,,on="s"]
+  setkey(macha$roi_cache, "r", "s")
+  setkey(macha$s, s)
+
+  macha
+
   }

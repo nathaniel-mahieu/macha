@@ -10,15 +10,18 @@ Encoding: UTF-8
 LazyData: true
 Depends:
   R (>= 3.1.0),
-	sn
-Imports:
+  sn,
+  data.table,
+  magrittr,
   foreach,
-	matrixStats,
-	baseline,
-	data.table,
-	magrittr
+  matrixStats,
+  baseline,
+  iterators,
+  igraph,
+  ggplot2,
+  gridExtra,
+  dbscan
 Suggests:
 	mzR,
 	xcms,
 	warpgroup
-	

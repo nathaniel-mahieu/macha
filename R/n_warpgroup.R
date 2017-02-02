@@ -1,14 +1,26 @@
 warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1) {
+
+  if (any(sapply(Nmacha$m, function(x) is.null(x$roi_cache)))) {
+    warning("Set keys on individual machas for faster processing 'makeroicache()'.")
+  }
+
+  if (!all(c("m", "r") %in% key(Nmacha$m.r))) {
+    warning("Set keys on $m.r to 'm' and 'r' for faster processing.")
+  }
+
+  do.plot=F
   if (is.null(ugs)) ugs = unique(Nmacha$m.c$g)
   ugs.iter = iter(ugs)
 
   nextEl = function() {
     g.g = nextElem(ugs.iter)
-
     .g = g.g
 
     Group = getgroup(Nmacha, .g)
     if (do.plot) plot.group(Nmacha, .g)
+
+    Group$cs[is.na(rtmin.g),rtmin.g:=0]
+
 
     #Search through each macha and find ROIs which could possibly contain peaks in this group (mainly concerned about missed peaks here)
     rtrange = c(min(Group$cs$rtmin.g)-maxdriftrt, max(Group$cs$rtmax.g) + maxdriftrt)
@@ -24,8 +36,8 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
       missingrois = lapply(seq_along(Nmacha$m), function(j) {
         M = Nmacha$m[[j]]
 
-        mzrange.u = cormz(mzrange, j, Nmacha$gmz, uncorrect = T)
-        rtrange.u = corrt(rtrange, j, Nmacha$grt, uncorrect = T)
+        mzrange.u = cormz(mzrange, Nmacha$gmz[[j]], uncorrect = T)
+        rtrange.u = corrt(rtrange, Nmacha$grt[[j]], uncorrect = T)
 
         M$r[M$k,,nomatch = NA, on="k"][M$s,,on="s"][mz < mzrange.u[2] & mz > mzrange.u[1] & rt < rtrange.u[2] & rt > rtrange.u[1]]$r %>% unique
       })
@@ -44,7 +56,21 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
       roi = Group$rs[r == rid & m == R$m]
       if (nrow(roi) < 1) roi = getroi(Nmacha$m[[R$m]], rid)
 
-      y = approx(corrt(roi$rt, R$m, Nmacha$grt), roi$ii, xout = rtsout)$y
+      y = approx(corrt(roi$rt, Nmacha$grt[[R$m[1]]]), roi$ii, xout = rtsout)$y
+      #y = approx(roi$rt, roi$ii, xout = rtsout)$y
+
+      y[is.na(y)] = min(y, na.rm=T)
+      y
+    }) %>% do.call(what = cbind)
+
+    bb.mat = lapply(seq_len(nrow(putativerois)), function(j) {
+      R = putativerois[j,]
+
+      rid = R$r
+      roi = Group$rs[r == rid & m == R$m]
+      if (nrow(roi) < 1) roi = getroi(Nmacha$m[[R$m]], rid)
+
+      y = approx(corrt(roi$rt, Nmacha$grt[[R$m[1]]]), roi$bb, xout = rtsout)$y
       #y = approx(roi$rt, roi$ii, xout = rtsout)$y
 
       y[is.na(y)] = min(y, na.rm=T)
@@ -58,7 +84,7 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
     ps[,"sample"] = which(!duplicated(colnames(eic.mat)))[as.numeric(factor(ps[,"sample"], levels = unique(colnames(eic.mat))))] # This currently assigns a peak in the first roi supplied per file - shoudl assign to the detected ROI
 
 
-    list(eic.mat = eic.mat, ps = ps, putativerois=putativerois, Group = Group, rtsout = rtsout, .g = .g)
+    list(eic.mat = eic.mat, bb.mat = bb.mat, ps = ps, putativerois=copy(putativerois), Group = copy(Group), rtsout = rtsout, .g = .g, m.n = length(Nmacha$m))
   }
 
 
@@ -66,31 +92,36 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
   class(obj) <- c('ixts', 'abstractiter', 'iter')
   obj
 }
-foreach (params = 1:10, j = icount()) %do% { print(j) }
 
-
-warpgroup.nmacha = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1, fracobs = 0.5, fraccontrib = 0.5, refit.var = c(2, 0.5, .1), do.plot = F) {
+warpgroup.nmacha = function(Nmacha, ugs = NULL, warpgroup.nmacha_data_l = NULL, sc.aligned.lim = 9, pct.pad = 0.1, min.peaks = 1, maxdriftrt = 5, maxdriftppm = 1, fracobs = 0.5, fraccontrib = 0.5, refit.var = c(2, 0.5, .1), do.plot = F) {
   cat("\nStarting aggressive refinement with warpgroup.\n")
 
   library(warpgroup)
 
   if (is.null(ugs)) ugs = unique(Nmacha$m.c$g)
 
+  if (is.null(warpgroup.nmacha_data_l)) {
+    warpgroup.nmacha_data_l = warpgroup.nmacha.iter(Nmacha, ugs, maxdriftppm, maxdriftrt)
+    }
+
   # Call Warpgroup
   glen = length(ugs)
-  cc.l = foreach (params = warpgroup.nmacha.iter(Nmacha, ugs, maxdriftppm, maxdriftrt), j = icount(), .errorhandling = "pass") %do% {
+
+  grt = Nmacha$grt
+
+  cc.l = foreach (params = warpgroup.nmacha_data_l, j = icount(), .errorhandling = "pass", .packages=c("macha", "warpgroup"), .noexport=c("Nmacha"), .options.redis=list(chunkSize=50)) %dopar% {
     #if (j %% 1 == 0) { cat(paste0("\r", j, " of ", glen, " mass channels analyzed. (", round(j/glen*100), "%)              ")) }
 
-    ps = params[["ps"]]; eic.mat = params[["eic.mat"]]; putativerois = params[["putativerois"]]; Group = params[["Group"]]; rtsout = params[["rtsout"]]; .g = params[[".g"]]
+    ps = params[["ps"]]; eic.mat = params[["eic.mat"]]; bb.mat = params[["bb.mat"]]; putativerois = params[["putativerois"]]; Group = params[["Group"]]; rtsout = params[["rtsout"]]; .g = params[[".g"]]; grt = grt
 
-    wgs = warpgroup(ps, eic.mat, sc.aligned.lim = 3, pct.pad = 0.1, min.peaks = 1)
+    wgs = warpgroup(ps, eic.mat, sc.aligned.lim = sc.aligned.lim, pct.pad = pct.pad, min.peaks = min.peaks)
 
     wgs = lapply(wgs, function(x) { x[,"sample"] = as.numeric(colnames(eic.mat))[x[,"sample"]]; x } )
 
     #1
     ## Remove warpgroups spawned by fewer groups than fraccontrib
     contribs = sapply(wgs, function(x) { sum(!is.na(x[,"n"])) })
-    wgs = wgs[contribs >= fraccontrib * length(Nmacha$m)]
+    wgs = wgs[contribs >= fraccontrib * length(params[['m.n']])]
 
     if (length(wgs) == 0) return(NULL)
 
@@ -104,7 +135,8 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1,
     ## Find a file which has the most seeds
     seed.origins = lapply(wgs, function(x) x[!is.na(x[,"n"]),"sample"])
     heuristicfiles = which(table(unlist(lapply(seed.origins, unique))) %>% { . == max(.)} ) %>% names %>% as.numeric
-    heuristicfile = sample(heuristicfiles, 1)
+    resample <- function(x, ...) x[sample.int(length(x), ...)]
+    heuristicfile = resample(heuristicfiles, 1)
 
     if (F) { # TODO: Add better seed selection code?
 
@@ -121,12 +153,17 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1,
 
 
     # Define fitting constraints (so we wind up with reasonably similar peaks)
-    .cs = sapply(wgs, function (x) x[x[,"sample"] %in% heuristicfiles,"n"])
+    .cs = sapply(wgs, function (x) x[x[,"sample"] %in% heuristicfile,"n"])
+    .cs = matrix(.cs, ncol = length(wgs))
+
 
     seed.constraints = apply(.cs, 2, function(x) {
       Group$cs[x][,.(location, scale, shape, factor)] %>% colMeans
     }) %>% aperm
 
+
+    wgs = wgs[!is.na(seed.constraints[,1])]
+    seed.constraints = seed.constraints[!is.na(seed.constraints[,1]),,drop=F]
 
     seed.constraints.var = rep(c(refit.var,0), each = nrow(seed.constraints))
 
@@ -135,13 +172,18 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1,
 
     #3
     # For each file
-    lapply(seq_along(putativerois$r), function(.roin) {
+    wgpeaks = lapply(seq_along(putativerois$r), function(.roin) {
 
       # BUild input for fitting
       seedsdt = dt[sample==putativerois$m[.roin]]
       seeds = seedsdt[,.(scmin, scmax, sc)] %>% as.matrix
 
-      eic = cbind(rt = rtsout, ii = eic.mat[,.roin])
+      bl = range(seeds) %>% { mean(bb.mat[.[1]:.[2],.roin]) }
+
+      eic = cbind(rt = rtsout, ii = eic.mat[,.roin] - bl)
+
+      seeds[seeds > nrow(eic)] = nrow(eic)
+      seeds[seeds < 1] = 1
 
       #3.6
       # Set file specific constraints
@@ -157,9 +199,11 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1,
       # Refit
       components = fitseeds(eic, seeds = seeds, unrelated.dist = 30, const.upper = const.upper, const.lower = const.lower, do.plot = do.plot)
 
+      components["baseline",] = components["baseline",] + bl
+
       mz = c(apply(components, 2, function(x) {
         range = c(x["rtmin"], x["rtmax"])
-        range = corrt(range, putativerois$m[.roin], Nmacha$grt, uncorrect = T)
+        range = corrt(range, grt[[putativerois$m[.roin]]], uncorrect = T)
 
         roi = Group$rs[r == putativerois$r[.roin]]
         #if (nrow(roi) < 1) roi = getroi(Nmacha$m[[putativerois$m[.roin]]], putativerois$r[.roin])
@@ -170,7 +214,19 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm = 1,
       }))
 
       rbind(components %>% as.matrix, mz, r = putativerois$r[.roin], m = putativerois$m[.roin], c = Group$cs[seedsdt$n]$c, g = .g, wg = seedsdt$wg) %>% aperm
-    }) %>% do.call(what = rbind)
+    }) %>% do.call(what = rbind) %>% data.table
+
+    pickbest = function(x) {
+      if (!any(duplicated(x$m))) return(x)
+
+      poss = which(x[,intpeak == max(intpeak),by="m"]$V1 + x[,!is.na(c)] + x[,!is.na(mz)] > 1)
+
+      meanint = mean(x[poss,intpeak])
+
+      x[,.SD[which.min(abs(intpeak - meanint))],by="m"]
+      }
+
+    wgpeaks[,pickbest(.SD),by="wg"] %>% as.matrix
   } #####
 
 

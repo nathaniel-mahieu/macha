@@ -19,12 +19,16 @@ findcomponents = function(
   cat("\nStarting component detection.\n")
 
   if (is.null(.roil)) .roil =  unique(macha$r$r)
+  if (is.numeric(.roil)) {
+    roi.job.input = getroi.iter(macha, .roil)
+  } else {
+    roi.job.input = .roil
+    }
   ngs = length(.roil)
-
 
   cat("\rProgress indicator:", 1, "of", ngs, "(ROIs analyzed)            ")
 
-  components = foreach (roi = getroi.iter(macha, .roil), i = icount(), .errorhandling = "pass") %dopar% {
+  components = foreach (roi = roi.job.input, i = icount(), .errorhandling = "pass", .packages=c("macha"), .options.redis=list(chunkSize=50)) %dopar% {
     if (i %% 5 == 0) { cat(paste0("\r", i, " of ", ngs, " ROIs analyzed. (", round(i/ngs*100), "%)              ")) }
 
     if (do.plot) { plot.roi(roi) }
