@@ -54,7 +54,7 @@ plotgmz = function(Nmacha) {
 
 
   Gcs = Nmacha$m.c[Nmacha$gcs[,.(c,m)],,on=.(c,m)]
-  Gcs[,mz.g:=cormz(mz, Nmacha$gmz[[m[1]]],by="m")]
+  Gcs[,mz.g:=cormz(mz, Nmacha$gmz[[m[1]]]),by="m"]
 
 
   tgs = sapply(split(Gcs$g, cut(Gcs$rtpeak, 4)), sample, size=1)
@@ -62,7 +62,7 @@ plotgmz = function(Nmacha) {
   preps = lapply(tgs, function(.g) {
 
     Group = getgroup(Nmacha, .g)
-    Group$cs[,mz.g := cormz(mz, Nmacha$gmz[[m[1]]], by = "m")]
+    Group$cs[,mz.g := cormz(mz, Nmacha$gmz[[m[1]]]), by = "m"]
 
     xlim = range(Group$cs[,.(mz, mz.g)])
 
