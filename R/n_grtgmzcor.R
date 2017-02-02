@@ -17,11 +17,11 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
   maxrt = max(Nmacha$m.c$rtmax) + 1000
 
   rtmat = rbind(rep(-100,length(Nmacha$m)), rep(0,length(Nmacha$m)), rtmat, rep(maxrt+100, length(Nmacha$m)))
-  grts = rowMeans(rtmat, na.rm = T)
+  meanrts = rowMeans(rtmat, na.rm=T)
 
   grt = list()
   for (coln in seq_len(ncol(rtmat))) {
-    df = data.frame(rt = rtmat[,coln], grt = grts)
+    df = data.frame(rt = rtmat[,coln], grt = meanrts)
     lo  = loess(grt ~ rt, df, degree=2, span = 0.1) #grt from rt
 
     #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
@@ -43,12 +43,12 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
 
   maxmz = max(Nmacha$m.c$mz) + 1000
   rtmat = rbind(rep(-100,length(Nmacha$m)),rep(0,length(Nmacha$m)),rtmat,  rep(maxmz+100, length(Nmacha$m)))
-  gmzs =  rowMeans(rtmat, na.rm=T)
+  meanrts =  rowMeans(rtmat, na.rm=T)
   #rtdmat[2,] = rtdmat[nrow(rtdmat),]
 
   gmz = list()
   for (coln in seq_len(ncol(rtmat))) {
-    df = data.frame(mz = rtmat[,coln], gmz = gmzs)
+    df = data.frame(mz = rtmat[,coln], gmz = meanrts)
     lo  = loess(gmz ~ mz, df, degree=2, span = 0.1) # predicts = rt - mean(rt); rt - prediction = mean(rt)
 
     #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
