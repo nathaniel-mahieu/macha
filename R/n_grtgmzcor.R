@@ -17,20 +17,20 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
   maxrt = max(Nmacha$m.c$rtmax) + 1000
 
   rtmat = rbind(rep(-100,length(Nmacha$m)), rep(0,length(Nmacha$m)), rtmat, rep(maxrt+100, length(Nmacha$m)))
-  rtdmat =  rtmat - rowMeans(rtmat, na.rm = T)
+  grts = rowMeans(rtmat, na.rm = T)
 
   grt = list()
   for (coln in seq_len(ncol(rtmat))) {
-    df = data.frame(rt = rtmat[,coln], rtd = rtdmat[,coln])
-    lo  = loess(rtd ~ rt, df, degree=2, span = 0.1) # predicts = rt - mean(rt); rt - prediction = mean(rt)
+    df = data.frame(rt = rtmat[,coln], grt = grts)
+    lo  = loess(grt ~ rt, df, degree=2, span = 0.1) #grt from rt
 
     #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
 
     rtouts = seq(-2, max(Nmacha$m[[coln]]$s$rt)+2, by = mean(diff(Nmacha$m[[coln]]$s$rt))*3)
 
-    corrections = predict(lo, rtouts)
+    grts = predict(lo, rtouts)
 
-    grt = c(grt, list(data.table(rt = rtouts, grt = rtouts - corrections)))
+    grt = c(grt, list(data.table(rt = rtouts, grt = grts)))
     }
 
 
@@ -43,21 +43,21 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
 
   maxmz = max(Nmacha$m.c$mz) + 1000
   rtmat = rbind(rep(-100,length(Nmacha$m)),rep(0,length(Nmacha$m)),rtmat,  rep(maxmz+100, length(Nmacha$m)))
-  rtdmat =  rtmat - rowMeans(rtmat, na.rm=T)
+  gmzs =  rowMeans(rtmat, na.rm=T)
   #rtdmat[2,] = rtdmat[nrow(rtdmat),]
 
   gmz = list()
   for (coln in seq_len(ncol(rtmat))) {
-    df = data.frame(rt = rtmat[,coln], rtd = rtdmat[,coln])
-    lo  = loess(rtd ~ rt, df, degree=2, span = 0.1) # predicts = rt - mean(rt); rt - prediction = mean(rt)
+    df = data.frame(mz = rtmat[,coln], gmz = gmzs)
+    lo  = loess(gmz ~ mz, df, degree=2, span = 0.1) # predicts = rt - mean(rt); rt - prediction = mean(rt)
 
     #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
 
     rtouts = seq(-2, max(Nmacha$m[[coln]]$s$rt)+2, by = mean(diff(Nmacha$m[[coln]]$s$rt))*3)
 
-    corrections = predict(lo, rtouts)
+    gmzs = predict(lo, rtouts)
 
-    gmz = c(gmz, list(data.table(mz = rtouts, gmz = rtouts - corrections)))
+    gmz = c(gmz, list(data.table(mz = rtouts, gmz = gmzs)))
   }
 
   Nmacha$gcs = ftg[,.(c,m,g)]
