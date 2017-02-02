@@ -179,7 +179,7 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
 
   y = eic[inds,"ii"] * scale.factor
   x = eic[inds,"rt"]
-  b = mean(eic[inds,"bb"],na.rm=T) * scale.factor
+
 
   if (do.plot) {
     plot(y, type="l")
@@ -202,6 +202,8 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
         optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead")
       })
   } else if (usebaseline) {
+    b = mean(eic[inds,"bb"],na.rm=T) * scale.factor
+
     opt = tryCatch(
       optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "BFGS", control = list(reltol = 1E-3, ndeps = c(rep(c(.5, .01, .01, .01), ncol(parhat.mat))))),
       error = function(e) {
