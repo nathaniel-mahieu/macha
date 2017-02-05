@@ -46,7 +46,7 @@ unityme = function(Nmacha, rules, zs = 1:6, ppmwid = 5, rtwid = 0.75, factor = 1
   MZ[, m :=mz*abs(z)][,mz:=NULL]
 
   # For each rule
-  knots = foreach (r = seq_len(nrow(rules)), .packages = c("data.table", "macha"), .options.redis=list(chunkSize=50)) %dopar% {
+  knots = foreach (r = seq_len(nrow(rules)), .packages = c("data.table", "macha"), .options.redis=list(chunkSize=1)) %dopar% {
     .r = r; rm(r)
     cat(sep="","\rWorking on rule \"", rules[.r, name.string], "\" (", round(.r/nrow(rules)*100,1), "%)        ")
 

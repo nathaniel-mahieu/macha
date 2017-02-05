@@ -217,13 +217,16 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, warpgroup.nmacha_data_l = NULL, 
     }) %>% do.call(what = rbind) %>% data.table
 
     pickbest = function(x) {
+      colns = colnames(x)
       if (!any(duplicated(x$m))) return(x)
 
       poss = which(x[,intpeak == max(intpeak),by="m"]$V1 + x[,!is.na(c)] + x[,!is.na(mz)] > 1)
 
       meanint = mean(x[poss,intpeak])
 
-      x[,.SD[which.min(abs(intpeak - meanint))],by="m"]
+      x = x[,.SD[which.min(abs(intpeak - meanint))],by="m"]
+      setcolorder(x, colns)
+      x
       }
 
     wgpeaks[,pickbest(.SD),by="wg"] %>% as.matrix
