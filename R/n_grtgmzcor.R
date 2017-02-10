@@ -69,13 +69,13 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
 
 
 corrt = function(rt, grt, uncorrect = F) {
-  if (uncorrect) approx(grt[,.(rt, grt)], xout = rt)$y
-  else approx(grt[,.(grt, rt)], xout = rt)$y
+  if (uncorrect) approx(grt[,.(grt, rt)], xout = rt)$y
+  else approx(grt[,.(rt, grt)], xout = rt)$y
 }
 
 cormz = function(rt, grt, uncorrect = F) {
-    if (uncorrect) approx(grt[,.(mz, gmz)], xout = rt)$y
-    else approx(grt[,.(gmz, mz)], xout = rt)$y
+    if (uncorrect) approx(grt[,.(gmz, mz)], xout = rt)$y
+    else approx(grt[,.(mz, gmz)], xout = rt)$y
 }
 
 
