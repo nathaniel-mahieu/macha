@@ -68,7 +68,7 @@ baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6) {
     #  featsd[mz > range[1] & mz < range[2]]
     #  )
 
-    m.inrange = featsd[{ind <- featsd[.(c(range[1], range[2])), which=TRUE, roll=TRUE]; ind[1][is.na(ind[1])] = 1; ind[2][is.na(ind[2])] = nrow(featsd); (ind[1]+1):ind[2]}]
+    m.inrange = fastrangedt(featsd, range, "mz")
 
     mat[j,] =  m.inrange[macha$s, sum(i, na.rm=T), roll=T, on="s", mult="all", by=.EACHI]$V1
   }
