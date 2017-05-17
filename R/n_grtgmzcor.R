@@ -53,7 +53,7 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
 
     #plot(rtd ~ rt, data = df); lines(lo$x[o], lo$fitted[o], col = "red")
 
-    rtouts = seq(-2, max(Nmacha$m[[coln]]$s$rt)+2, by = mean(diff(Nmacha$m[[coln]]$s$rt))*3)
+    rtouts = seq(-2, max(Nmacha$m[[coln]]$k$mz)+2, by = mean(diff(Nmacha$m[[coln]]$k$mz))*3)
 
     gmzs = predict(lo, rtouts)
 
