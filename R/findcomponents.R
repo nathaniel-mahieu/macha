@@ -13,31 +13,28 @@ getroi.iter = function(macha, .roil) {
 #' Analyze ROIs for retention-time-domain peaks satisfying parameters
 #'
 #' \code{findcomponents} Sequentially analyzes detected ROIs for peaks. This proceeds by several steps.
-#' 
+#'
 #' 1. Peaks are seeded by a fast, scale-space peak detection algorithm
 #' 2. Skew-normal distributions are initialized and quickly fit to the seed regions.3
 #' 3. Distributions within \code{unrelated.dist} of each other are fit simultaneously to the raw data.
 #' 4. Fit distributions are checked by the supplied parameters and peaks not satisfying those parameters are removed.  The distribution is then refit.
 #' 5. This repeats until the fit distributions stabilize.
-#' 
-#' The following parameters control the seeding process: 
-#' 
+#'
 #' @param S The smoothing scales to apply when searching for peaks. Dependent on the amount of signal variation.  Suggested values: smooth peaks, 1:3; rough peaks, 3:(1/2 peakwidth in scans)
 #' @param seed.maxdensity The maximum density at which to seed peaks in units of peaks/scan. Suggested value: 1/(One third the peak width in scans)
 #' @param	seed.maxdist Integer. The maximum distance in scans the local maximum of the smoothed trace can travel and still positively reinforce a peak. Suggested value: One quarter the peak width in scans
 #' @param	seed.minwidth Numeric. Minimum width in scans of a putative region to be returned as a seed.
 #' @param	seed.sn.perpeak Required signal to noise (intensity/baseline) for a seed to be retained.  Each index of the vector corresponds to the number of peaks needed above the specified level.  c(Inf, 50, 10) requires a single point to be 50 times the baseline but a peak with three observed scans to be 10x the baseline.
 #' @param	seed.sn.range Integer. The number of scans around a seed to look for peaks satisfying the signal to noise limits
-#' 
-#' The following parameters control the fitting process:
-#' 
+#'
+#'
 #' @param unrelated.dist Integer. The distance two seeds must be apart to fit them individually (much faster). Suggested value: large peakwidth * 3
 #' @param min.peakwidth numeric. The minimum width a component can be to be retained. In seconds.
 #' @param min.sharpness numeric. A lower limit on peak.height/peak.width.  Units Intensity/Second.
 #' @param min.fractionobs numeric. A lower limit on the fraction of expected observations present in the peak region.
-#' 
-#' @return List (a Macha object) containing additional list named c containing detected components and the parameters of the skew normal distribution describing that component. 
-#' 
+#'
+#' @return List (a Macha object) containing additional list named c containing detected components and the parameters of the skew normal distribution describing that component.
+#'
 #' @examples
 #' \dontrun{
 #' #Can run this locally in parallel to speed processing.  Avoids lots of network IO for each job and caches progress in case of a bug or interruption.
