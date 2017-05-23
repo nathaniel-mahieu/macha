@@ -39,7 +39,7 @@ plotgrt = function(Nmacha) {
   g = do.call(arrangeGrob, c(sapply(preps, '[', 1), list(nrow = 1)))
   g2 = do.call(arrangeGrob, c(sapply(preps, '[', 2), list(nrow = 1)))
   grid.arrange(curves, g, g2, nrow = 3, top="RT correction curves and randomly selected peak groups.", layout_matrix = cbind(c(1,1,2,3)))
-
+  
 }
 
 plotgmz = function(Nmacha) {

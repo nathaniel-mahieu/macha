@@ -5,16 +5,19 @@
 #' Developed to robustly estimate baselines in a variety of situations. Primarily: 1. cases where the baseline is not always observed, as in QE data; 2. Cases where a single ROI does not capture a large enough region to estimate the baseline.
 #' To achieve this, ROIs of similar mass are grouped based on \code{ppmwin}. For each ROI group all the signal throughout the dataset is aggregated into an EIC. This EIC roll-joined, such that 0 values are filled with the last observed intensity. From this EIC a baseline is estimated.
 #'
-#' @param rois Matrix. Rows are observed mass peaks. Columns named "mz", "rt", "g", "i".  Column "g" denotes which ROI the mass peak belongs to.
-#' @param features Matrix. Rows are observed mass peaks. Columns named "mz", "rt", "i". This should include all noise for baseline estimation.
-#' @param rts Character. The retention times of each scan. Used to convert "rt" above into scan number.
+#' @param macha Macha list containing list items k and s.
 #' @param ppmwin Numeric. The ppm window within which to sum to denote the baseline.
 #' @param lambda1,lambda2 Integer. See \code{\link[baseline::baseline.irls]}
 #'
 #'
-#' @return Matrix. Column "b" is the baseline intensity. Column "d" is the fraction of the mass channel had signal in it. Each row corresponds to the same row in the supplied \code{roi}.
-#'
+#' @return List (a Macha object) containing additional list named k_b containing the calculated baseline intensity at every mass peak. (Note that this refers to peak IDs much like a relational database.)
+#' 
 #' @seealso \code{\link[baseline::baseline.irls]}
+#'
+#' @examples
+#' \dontrun{
+#' baseline(macha, ppmwin = 3, lambda1 = 6, lambda2 = 7)
+#' }
 #'
 #' @export
 #'

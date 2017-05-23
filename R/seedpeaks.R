@@ -21,7 +21,7 @@
 #'
 
 #These should all be in RT
-seedpeaks = function(roi, S=3:8, seed.maxdensity = 1/10, seed.maxdist=4, seed.sn.perpeak = c(Inf, 50, 5, 3, 2), seed.sn.range = 2, seed.sn.adjust = 1, seed.minwidth = 3, do.plot=F) {
+seedpeaks = function(roi, S=3:8, seed.maxdensity = 1/5, seed.maxdist=4, seed.sn.perpeak = c(Inf, 50, 5, 3, 2), seed.sn.range = 2, seed.sn.adjust = 1, seed.minwidth = 3, do.plot=F) {
   # roi = data.table with: factored rt, i, b, d
 
   nullresult = matrix(nrow = 0, ncol = 3, dimnames=list(NULL, c("start", "end", "peak")))

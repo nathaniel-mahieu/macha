@@ -1,9 +1,20 @@
 #' ROI detection based on density estimation.
 #'
 #' \code{findrois} takes mass spectra and assigns peaks to ROIs
+#' 
+#' In addition this function assures that only one point per scan is in a ROI.
 #'
-#' See: \code{\link[centroidgroups]}.  In addition this function assures that only one point per scan is in a ROI.
+#' See: \code{\link[centroidgroups]} for parameter descriptions.  
 #'
+#' @return List (a Macha object) containing additional list named k_r containing the assignment of each mass peak (k) to an ROI (r).
+#' 
+#' @examples
+#' \dontrun{
+#' findrois(macha, minlength = 15, ppm = 2, rtwid = 7)
+#' }
+#' 
+#' @export
+
 findrois = function(features, minlength = 5, ppm = 1, rtwid = 10) {
   cat("Finding ROIs\n")
 
@@ -76,8 +87,6 @@ kernelsplitrt = function(features, rtwid = 10) {
 #'
 #' \code{centroidgroups} takes mass spectra and assigns peaks to ROIs.
 #'
-#'
-#'
 #' @param features Matrix. Rows are observed mass peaks. Columns are ordered to contain "mz", "rt", "i".
 #' @param ppm Numeric. Bandwidth of kernel for estimating density in the mz dimension.
 #' @param rtwid Numeric. Bandwidth of kernel for estimating density in the rt dimension.
@@ -90,7 +99,20 @@ centroidgroups = function(features, ppm, rtwid, minlength) {
   warning("centroid groups is deprecated. use dengroup.ppm().")
 
   dengroup.ppm(features, ppm, rtwid, minlength)
-  }
+}
+
+#' Speed minded function for iteratively splitting a group of points by two density estimates.
+#'
+#' \code{dengroup.ppm} takes mass spectra and assigns peaks to ROIs.
+#'
+#' @param features Matrix. Rows are observed mass peaks. Columns are ordered to contain "mz", "rt", "i".
+#' @param ppm Numeric. Bandwidth of kernel for estimating density in the mz dimension.
+#' @param rtwid Numeric. Bandwidth of kernel for estimating density in the rt dimension.
+#' @param minlength Integer. If a group is smaller than this it is discarded.
+#'
+#'
+#' @return Integer vector containing assignment of each point to a group.
+#'
 dengroup.ppm = function (features, ppm, rtwid, minlength) {
   l = nrow(features)
 
