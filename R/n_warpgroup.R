@@ -54,7 +54,11 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
 
       rid = R$r
       roi = Group$rs[r == rid & m == R$m]
-      if (nrow(roi) < 1) roi = getroi(Nmacha$m[[R$m]], rid)
+      if (nrow(roi) < 1) {
+        roi = getroi(Nmacha$m[[R$m]], rid)[,m:=R$m]
+
+        Group$rs <<- rbind(Group$rs, roi)
+        }
 
       y = approx(corrt(roi$rt, Nmacha$grt[[R$m[1]]]), roi$ii, xout = rtsout)$y
       #y = approx(roi$rt, roi$ii, xout = rtsout)$y
@@ -96,9 +100,9 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
 #' Collectively analyze the peaks detected across samples to determine consensus components
 #'
 #' \code{warpgroup.nmacha} Combines information from all independent peak detection rounds to determine a set of consensus components, greatly increasing the consistency of feature detection and integration across samples.
-#' 
+#'
 #' After warpgrouping of the mass traces raw data is refit with seeded features.  The fits are constrained such that fit peaks are similar, but allow for variance from run to run. The allowed variance should reflect the observed variance in peak shape across runs.
-#' 
+#'
 #' @param Nmacha An Nmacha object containing peaks grouped between samples.
 #' @param ugs Integer. Vector of group numbers to warpgroup allowing a subset of the data to analyzed. If NULL all are warpgrouped.
 #' @param	warpgroup.nmacha_data_l List. Pre-computed data to be distributed parallely.  Allows caching of an expensive step and faster recovery in the case of errors.
@@ -106,12 +110,12 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
 #' @param pct.pad Numeric. The EIC is padded by this factor of the original length.  Padding decays from end value to zero over this length.
 #' @param min.peaks Integer. The minimum number of peaks across samples in a group to apply warpgrouping. Saves computation time. Don't set higher than fracobs/fraccontrib
 #' @param maxdriftrt Nuemric. The maximum observed retention time drift you wish to correct. EICs are expanded by this amount.  Drastically increases processing time.
-#' @param fraccontrib Numeric. The minimum number of originally detected peaks remaining in a warpgroup in order to retain it. 
+#' @param fraccontrib Numeric. The minimum number of originally detected peaks remaining in a warpgroup in order to retain it.
 #' @param refit.var Numeric. Vector with three values. Limits on the parameters of the refitted peaks. The fit peaks will be constrained to the mean of the contributing peaks parameters plus or minus refit.var. If peaks change throughout a run these values should eb larger.  The contraint ranges refer to the following parameters c(location, scale, shape)
 #' @param do.plot Boolean. Plots a bunch of steps.  Slow if T.
-#' 
-#' @return List (an Nmacha object) containing additional list named cc (consensus components), m.c_cc (mapping between m.c and cc). 
-#' 
+#'
+#' @return List (an Nmacha object) containing additional list named cc (consensus components), m.c_cc (mapping between m.c and cc).
+#'
 #' @examples
 #' \dontrun{
 #' warpgroup.nmacha(Nmacha, ugs = ugs, warpgroup.nmacha_data_l = warpgroup.nmacha_data_l, sc.aligned.lim = 9, pct.pad = 0.1, min.peaks = min.peaks, maxdriftrt = 1, maxdriftppm = 1, fracobs = 0.3, fraccontrib = 0.3, refit.var = c(2, 0.5, 1), do.plot = F)
