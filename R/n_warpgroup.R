@@ -55,9 +55,9 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
       rid = R$r
       roi = Group$rs[r == rid & m == R$m]
       
-      if (!(rid %in% Group$rs$r)) {
+      if (nrow(roi) < 1) {
         roi = getroi(Nmacha$m[[R$m]], rid)[,m:=R$m]
-        
+
         Group$rs <<- rbind(Group$rs, roi)
         }
 
