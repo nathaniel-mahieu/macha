@@ -25,3 +25,7 @@ Suggests:
 	mzR,
 	xcms,
 	warpgroup
+Imports:
+  TTR,
+  signal
+RoxygenNote: 6.0.0
