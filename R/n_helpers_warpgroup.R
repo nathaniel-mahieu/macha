@@ -1,8 +1,14 @@
 
 plot.wgroup = function (Nmacha, .g_den) {
 
-  .ccs = Nmacha$m.c_cc[Nmacha$m.c[g==.g_den,.(m, c)],cc,on=c("m", "c")]
+  .ccs = Nmacha$m.c_cc[Nmacha$m.c[g==.g_den,.(m, c)],cc,on=c("m", "c"), nomatch = 0]
 
+  if (length(.ccs) < 1) {
+    warning("No warpgroups resulted from this rough group.")
+    return(NULL)
+  }
+  
+  
   ps = Nmacha$m.c_cc[cc %in% .ccs]
 
   Group = getgroup(Nmacha, .g_den)
