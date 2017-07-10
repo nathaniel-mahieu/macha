@@ -142,12 +142,12 @@ webtrace = function(k, scan, neighbors = 3) {
   colnames(matches) = c("v1", "v2")
   matchdt = data.table(matches)
 
-  matchdt[,v1.s := k[match(v1,as.numeric(k)), s]]
-  matchdt[,v1.mz := k[match(v1,as.numeric(k)), mz]]
-  matchdt[,v2.s := k[match(v2,as.numeric(k)), s]]
-  matchdt[,v2.mz := k[match(v2,as.numeric(k)), mz]]
+  matchdt[,v1.s := k[match(v1,k), s]]
+  matchdt[,v1.mz := k[match(v1,k), mz]]
+  matchdt[,v2.s := k[match(v2,k), s]]
+  matchdt[,v2.mz := k[match(v2,k), mz]]
   matchdt[,weight := abs((v1.mz - v2.mz) * 1E3)]
-  matchdt[,weight := max(weight)-weight + 1]
+  suppressWarnings(matchdt[,weight := max(weight)-weight + 1])
 
   # Trim links with high ppm
   matchdt = matchdt[matchdt$weight > quantile(matchdt$weight, .02)]
@@ -184,6 +184,7 @@ webtrace = function(k, scan, neighbors = 3) {
 
     plot(g, vertex.label = NA, vertex.size = 3, edge.arrow.size = 0, main="Graph of peak relations")
     ggplot(k) + geom_point(aes(y = mz, x = s, colour = g %>% factor)) + geom_text(aes(x = median(s), y = median(mz), label = g), check_overlap = T) + ggtitle("Peak Group Assignments")
+    ggplot(k) + geom_point(aes(y = mz, x = s, colour = duplicated(s))) + geom_text(aes(x = median(s), y = median(mz), label = g), check_overlap = T) + ggtitle("Peak Group Assignments")
     ggplot(k) + geom_point(aes(y = mz, x = s, colour = g %>% factor)) + geom_text(aes(x = median(s), y = median(mz), label = g), check_overlap = T) +
       geom_segment(data = matchdt, aes(x = v1.s, xend = v2.s, y = v1.mz, yend = v2.mz), position = "jitter") + ggtitle("Peak assignments with web pre trimming")
   }
@@ -225,11 +226,11 @@ rectwebtrace = function (k, ppm.rect = 8, scan.rect = 4, scan.web = 20, neighbor
   cat("\nCompleted rectroi.\n")
 
   k[,webg := g]
-
   dups = k[,sum(duplicated(s)),by="g"][V1 > 0]
 
   for (i in seq_len(nrow(dups))) {
-    cat("                                       Resolving conflict", i, "of", nrow(dups), "with webtrace.")
+    cat("                           Resolving conflict", i, "of", nrow(dups), "with webtrace.")
+    i = i+1
     dg = dups[i]$g
     ksub = k[g == dg]
 
