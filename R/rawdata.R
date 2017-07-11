@@ -1,14 +1,14 @@
 #' Import .mzXML data into a Macha object
 #'
 #' \code{rawdata} reads a single .mzXML file into a Macha object which consists of a named list of data.table objects. These lists contain the raw mass spectral data from the file.
-#' 
+#'
 #' Also handles scan stitching if multiple scan segments were employed.
-#' 
-#' @param file Character. Path to the .mzXML file 
+#'
+#' @param file Character. Path to the .mzXML file
 #' @param splits Matrix with N rows and 2 columns containing the mass ranges to extract from sequential scans.  Column 1 is the start of the mass range and column 2 is the end of the mass range.  The first row will apply to the first scan in the data file, the second to the second, and so on.  When the matrix rows are exhausted it will return to the first row. For example, a two row matrix, the first row will apply to all odd scans and the second to all even scans. Each set of N scans will be combined into a single scan for further analysis.
 #'
-#' @return List (a Macha object) containing lists named k (mass peaks), s (scan information), and metadata. 
-#' 
+#' @return List (a Macha object) containing lists named k (mass peaks), s (scan information), and metadata.
+#'
 #' @examples
 #' \dontrun{
 #' rawdata('file1.mzXML', splits = rbind(c(0, 300), c(300, 3000)))
@@ -32,6 +32,8 @@ rawdata = function(file, splits = NULL) {
   if (!is.null(splits)) {
     nsplits = nrow(splits)
 
+    if (nsplits > 1) { message("Scan stitching was applied! Scan numbers no longer corrspond to original file.") }
+
     seglengths = diff(c(data$scanindex, length(data$mz)))
     seg = rep(rep(seq(nsplits), ceiling(length(data$rt)/nsplits))[1:length(seglengths)], seglengths)
     keepmat = outer(splits[,1], data$mz, "<") & outer(splits[,2], data$mz, ">") & outer(seq(nsplits), seg, "==")
@@ -46,7 +48,7 @@ rawdata = function(file, splits = NULL) {
     data$intensity = data$intensity[keepvec]
     data$scanindex = as.integer(newindices)
     data$rt = data$rt[newis]
-    data$acquisitionNum = data$acquisitionNum[newis]
+    data$acquisitionNum = as.numeric(factor(data$acquisitionNum[newis]))
     data$polarity = data$polarity[newis]
     }
 
