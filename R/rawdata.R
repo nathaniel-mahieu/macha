@@ -48,10 +48,12 @@ rawdata = function(file, splits = NULL) {
     data$intensity = data$intensity[keepvec]
     data$scanindex = as.integer(newindices)
     data$rt = data$rt[newis]
-    data$acquisitionNum = as.numeric(factor(data$acquisitionNum[newis]))
+    data$acquisitionNum = seq_along(data$acquisitionNum[newis])
     data$polarity = data$polarity[newis]
     }
 
+  data$acquisitionNum = seq_along(data$acquisitionNum)
+  
   list(
     s = data.table(data.frame(s = data$acquisitionNum, rt = data$rt, polarity = data$polarity)),
     k = data.table(data.frame(mz = data$mz, i = data$intensity, s = rep(data$acquisitionNum, diff(c(data$scanindex, length(data$mz)))), k = seq_along(data$mz))),

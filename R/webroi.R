@@ -34,7 +34,7 @@ rectroi = function(k, ppm, scan) {
   currgn = 1
   while (prevgn != currgn) { #OPTIONAL: Speed up by caching completed groups
     prevgn = currgn
-    cat("\rGroup Number:", currgn)
+    cat("\rNumber of Groups:", currgn, "       ")
 
     setkey(k, g, mz)
     x = k$mz
@@ -52,7 +52,7 @@ rectroi = function(k, ppm, scan) {
     k[,g:= as.numeric(factor(paste(g, inds)))]
 
     currgn = max(k$g)
-    cat("\rGroup Number:", currgn)
+    cat("\rGroup Number:", currgn, "       ")
     }
 
   ####
@@ -111,7 +111,7 @@ rectroi = function(k, ppm, scan) {
 #'
 
 webtrace = function(k, scan, neighbors = 3) {
-  cat("\rWebtrace group", k$g[[1]])
+  cat("\rWebtrace group:", k$g[[1]])
   k = copy(k)
   korder = k$k
   setkey(k, s, mz)
@@ -155,11 +155,23 @@ webtrace = function(k, scan, neighbors = 3) {
 
   #Try Min Cut Approaches
   g = igraph::graph.data.frame(matchdt[,.(as.character(v1), as.character(v2), weight)], directed = F, vertices = as.character(k$k))
+  
+  
+
+
   while(T) {
+    # More resolution necessary?
     o.s = outer(k$s, k$s, "==")
     o.s[upper.tri(o.s, T)] = F
-    storesolv = which(o.s, arr.ind = T)
-    storesolv[] = k$k[storesolv] %>% as.character
+    storesolv_gs = storesolv = which(o.s, arr.ind = T)
+    storesolv_gs[] = storesolv[] = k$k[storesolv] %>% as.character
+    
+    storesolv_gs[] = match(storesolv_gs, names(igraph::membership(igraph::components(g))))
+    storesolv = storesolv[storesolv_gs[,1] == storesolv_gs[,2],,drop=F]
+    
+    cat("\rWebtrace group:", k$g[[1]], "-", nrow(storesolv), "conflicts remaining.      ")
+    
+    if (nrow(storesolv) < 1) {break}
 
     mincuts = lapply(seq_len(nrow(storesolv)), function(row) {
       igraph::max_flow(g, storesolv[row,1], storesolv[row,2])
@@ -168,10 +180,8 @@ webtrace = function(k, scan, neighbors = 3) {
     mincutt = lapply(mincuts, function(x) {
       x$cut %>% sapply(as.numeric)
     }) %>% unlist %>% table
-    cat("\rWebtrace group:", k$g[[1]], "-", length(mincutt), "conflicts remaining.      ")
-    if (length(mincutt) < 1) {break}
-
-    delnum = max(3, floor(length(mincutt)/8))
+    
+    delnum = max(3, floor(length(mincutt)/5), sum(mincutt > .5*nrow(storesolv)))
 
     g = igraph::delete.edges(g, head(as.numeric(names(mincutt[order(mincutt, decreasing = T)])), n = delnum))
     }
@@ -179,7 +189,7 @@ webtrace = function(k, scan, neighbors = 3) {
   ####
   #Plots
   if (F) {
-    ids = igraph::membership(components(g))[match(as.numeric(names(igraph::membership(components(g)))), k$k)] %>% unname
+    ids = igraph::membership(igraph::components(g))[match(as.numeric(names(igraph::membership(igraph::components(g)))), k$k)] %>% unname
     k[,g := ids]
 
     plot(g, vertex.label = NA, vertex.size = 3, edge.arrow.size = 0, main="Graph of peak relations")
@@ -228,17 +238,24 @@ rectwebtrace = function (k, ppm.rect = 8, scan.rect = 4, scan.web = 20, neighbor
   k[,webg := g]
   dups = k[,sum(duplicated(s)),by="g"][V1 > 0]
 
+  cat("Running webtrace.\n")
   for (i in seq_len(nrow(dups))) {
-    cat("                           Resolving conflict", i, "of", nrow(dups), "with webtrace.")
-    i = i+1
     dg = dups[i]$g
     ksub = k[g == dg]
 
+    cat("                           Resolving conflicting group", i, "of", nrow(dups), "with webtrace.", nrow(ksub), "peaks in group.           ")
+    
     foo = webtrace(ksub, scan.web, neighbors.web)
 
+    #p = profvis({
+    #  webtrace(ksub, scan.web, neighbors.web)
+    #  })
+    
     k[foo, webg := i.g, on="k"]
+    i = i+1
   }
-
+  cat("\nCompleted webtrace.")
+  
   k[,r:= as.numeric(factor(paste(g, webg)))]
 
 
