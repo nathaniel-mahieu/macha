@@ -20,34 +20,33 @@ plot.roi = function(roi) {
   par(.pardefault)
   }
 
-getroi = function(macha, roi.id) {
 
+getroi = function(macha, roi.id) {
   if (is.null(macha[["roi_cache"]])) {
     warning("Set roi_cache for faster processing 'makeroicache()'.")
 
-    macha$roi_cache = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k", nomatch=0][macha$s,,on="s"]
-    setkey(macha$roi_cache, "r", "s")
-    setkey(macha$s, s)
+    macha$roi_cache = makeroicache(macha)
   }
 
   roi = macha$roi_cache[r == roi.id]
-
-  region = macha$s[s %in% min(roi$s):max(roi$s)]
-
-  roi = roi[region,,nomatch=0,on="s"][,rt:=NULL]
-  foo = roi[region[,.(s,rt)], .(i,b,s, rt), roll=T, on="s"][,ii:=i][,bb:=b][,b:=NULL][,i:=NULL]
-  roi = roi[foo,,on="s"][,r:=roi.id]
   setkey(roi, "s")
 
   roi
   }
 
+
+
 makeroicache = function(macha) {
-
-  macha$roi_cache = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k", nomatch=0][macha$s,,on="s"]
+  macha$roi_cache = macha$k[macha$k_r,,on="k"]
+  
+  if (!is.null(macha$k_b)){
+    macha$roi_cache = macha$roi_cache[macha$k_b,,on="k", nomatch=0]
+  }
+  
+  setkey(macha$roi_cache, r, s)
+  rolledmacha = macha$roi_cache[,.SD[macha$s,,roll=T, rollends=F, on="s", nomatch=0],by="r"]
+  
+  macha$roi_cache = macha$roi_cache[rolledmacha[,.(s,rt,r,polarity,ii = i, bb = b)],,on=c("r", "s")]
   setkey(macha$roi_cache, "r", "s")
-  setkey(macha$s, s)
-
-  macha
-
+  macha$roi_cache[,.(s, k, r, rt, i, mz, b, d, ii, bb, polarity)]
   }
