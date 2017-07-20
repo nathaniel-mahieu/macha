@@ -30,40 +30,35 @@ baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6) {
 
   # Aggregate ROIs which are close in mass but possibly separate in retention time.
   cat("\nAggregating mass channels.")
-  massdt = roisd[,mean(mz),by=r]
-
-  o = order(massdt$V1)
-  m = massdt$V1[o]
-  jumps = diff(m) / m[-1] * 1E6
-
-  gs = c(cumsum(c(0,jumps) > ppmwin - 0.5))
-  toolarge = sapply(split(m, gs), function(x) { diff(range(x))/mean(x) * 1E6 }) %>% '>'(ppmwin) %>% which
-
-  maxg = max(gs)
-  for (gn in toolarge - 1) {
-    wtl = which(gs == gn)
-    gs[wtl] = maxg + 1 + seq_along(wtl)
-    maxg = maxg + length(wtl)
+  massdt = roisd[,.(meanmz = mean(mz)),by=r]
+  setkey(massdt, meanmz)
+  
+  jumps = diff(massdt$meanmz) / massdt$meanmz[-1] * 1E6
+  massdt[,gs:=cumsum(c(0,jumps) > ppmwin - 0.5) + 1]
+  
+  granges = massdt[,.(grange = diff(range(meanmz))/mean(meanmz)*1E6),by=gs]
+  
+  for (gn in granges[grange > ppmwin]$gs) {
+    massdt[gs == gn, gs := max(massdt$gs) + 1 + seq_along(gs)]
   }
 
-  massdt[,mchan:=as.numeric(factor(gs))[o]]
+  massdt[,mchan:=as.numeric(factor(gs))]
   roisd[massdt, mchan := mchan, on="r"]
 
-  mchans = roisd[,.(mz = mean(mz)),by=mchan]
-  ranges = cbind(mchans$mz-mchans$mz*(ppmwin+0.5)/1E6, mchans$mz + mchans$mz*(ppmwin+0.5)/1E6)
-
+  mchans = roisd[,.(mz = mean(mz)),by=mchan][,':='(mzmin = mz - mz*(ppmwin+0.5)/1E6, mzmax = mz + mz*(ppmwin+0.5)/1E6)]
+  setkey(mchans, mchan)
 
   cat("\nExtracting mass channels.\n")  # Put all ROIs into a matrix and baseline together (~20x faster than individual baselining.)
 
   setkey(macha$s, "s")
   setkey(featsd, "mz")
-  mat = matrix(ncol = nrow(macha$s), nrow = nrow(ranges), dimnames = list(mchans$mchan, macha$s$s))
+  mat = matrix(ncol = nrow(macha$s), nrow = nrow(mchans), dimnames = list(mchans$mchan, macha$s$s))
 
-  nms = nrow(ranges)
-  for (j in seq_len(nrow(ranges))) {
+  nms = nrow(mchans)
+  for (j in seq_len(nrow(mchans))) {
     if (j %% 50 == 0) { cat(paste0("\r", j, " of ", nms, " mass channels analyzed. (", round(j/nms*100), "%)              ")) }
 
-    range = ranges[j,]
+    range = mchans[j,.(mzmin, mzmax)] %>% as.numeric
 
     #Stack exchange soltuion here: http://stackoverflow.com/questions/40665673/does-data-table-implement-fast-range-subsetting-based-on-binary-search-what-is
     #microbenchmark::microbenchmark(
