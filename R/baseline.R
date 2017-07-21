@@ -22,7 +22,7 @@
 #' @export
 #'
 
-baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6) {
+baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6, plot.summary=F) {
   cat("\nStarted baselining.")
 
   featsd = macha$k[,.(mz, s, i)]
@@ -75,11 +75,29 @@ baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6) {
 
   bl = baseline::baseline(mat, lambda1 = lambda1, lambda2 = lambda2)@baseline
 
-
   cat("\nFinished baselining.")
 
   bldt = data.table(b = c(bl), d = rowSums(mat>0), mchan=as.integer(rownames(mat)), s = rep(as.integer(colnames(mat)), each=nrow(mat)))
   macha$k_b = roisd[bldt,.(k,b,d),nomatch=0, on=.(mchan,s)]
 
+  try({if (is.character(plot.summary)) {
+    pdf(file="test_baseline.pdf", width = 12, height=7)
+    
+    dt = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k"]
+    
+    rlens = dt[,.N,by=r]
+    
+    roisd[,.(dups = sum(duplicated(s))),by=mchan]$dups %>% hist(main="Multiple mass peaks per scan in each mass channel for baselining.")
+    roisd[,.(dups = sum(duplicated(s))),by=mchan][dups > 0]$dups %>% hist(main="Multiple mass peaks per scan in each mass channel for baselining.")
+    
+    for (.r in sample(rlens[N > quantile(N, 0.75)]$r, 20)) {
+      { dt[r == .r] %>% ggplot() + geom_line(aes(x = s, y = i)) + geom_line(aes(x = s, y = b), colour = "red") + ggtitle("Example Long Baseline", paste0("ROI ID: ", i)) } %>% print
+    }
+    for (.r in sample(rlens[N < quantile(N, 0.75)]$r, 20)) {
+      { dt[r == .r] %>% ggplot() + geom_line(aes(x = s, y = i)) + geom_line(aes(x = s, y = b), colour = "red") + ggtitle("Example Short Baseline", paste0("ROI ID: ", i)) } %>% print
+    }
+    dev.off()
+  }})
+  
   macha
 }
