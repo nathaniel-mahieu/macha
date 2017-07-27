@@ -40,9 +40,9 @@ seedpeaks = function(roi, S=3:8, seed.maxdensity = 1/5, seed.maxdist=4, seed.sn.
   if (length(v.pad) < max(S)) { S = seq(S[1], length(v), by=1) }
 
   #Find stable local maxima and minima with scale space peak picking
-  C = sspp(v.pad, S = S, maxdist = seed.maxdist, do.plot = F)[orig.region]
+  C = sspp(v.pad, S = S, maxdist = seed.maxdist, do.plot = do.plot)[orig.region]
   vinv = -v.pad + max(v.pad)
-  Cv = sspp(vinv, S = S, maxdist = seed.maxdist, do.plot = F)[orig.region]
+  Cv = sspp(vinv, S = S, maxdist = seed.maxdist, do.plot = do.plot)[orig.region]
 
   if (do.plot) {
     scores = cbind(which(C>1), C[C>1])

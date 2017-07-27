@@ -54,7 +54,7 @@ warpgroup.nmacha.iter = function(Nmacha, ugs = NULL, maxdriftrt = 5, maxdriftppm
 
       rid = R$r
       roi = Group$rs[r == rid & m == R$m]
-      
+
       if (nrow(roi) < 1) {
         roi = getroi(Nmacha$m[[R$m]], rid)[,m:=R$m]
 
@@ -208,6 +208,7 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, warpgroup.nmacha_data_l = NULL, 
       # BUild input for fitting
       seedsdt = dt[sample==putativerois$m[.roin]]
       seeds = seedsdt[,.(scmin, scmax, sc)] %>% as.matrix
+      seeds[seeds > nrow(bb.mat)] = nrow(bb.mat)
 
       bl = range(seeds) %>% { mean(bb.mat[.[1]:.[2],.roin]) }
 
@@ -244,7 +245,19 @@ warpgroup.nmacha = function(Nmacha, ugs = NULL, warpgroup.nmacha_data_l = NULL, 
         sum(matrixStats::rowProds(proi[,.(mz, i)] %>% as.matrix),na.rm=T)/sum(proi$i,na.rm=T)
       }))
 
-      rbind(components %>% as.matrix, mz, r = putativerois$r[.roin], m = putativerois$m[.roin], c = Group$cs[seedsdt$n]$c, g = .g, wg = seedsdt$wg) %>% aperm
+      intraw = c(apply(components, 2, function(x) {
+        range = c(x["rtmin"], x["rtmax"])
+        range = corrt(range, grt[[putativerois$m[.roin]]], uncorrect = T)
+
+        roi = Group$rs[r == putativerois$r[.roin]]
+        #if (nrow(roi) < 1) roi = getroi(Nmacha$m[[putativerois$m[.roin]]], putativerois$r[.roin])
+
+        proi = roi[{ind <- roi[.(c(range[1], range[2])), which=TRUE, roll=TRUE, on="rt"]; ind[1][is.na(ind[1])] = 1; ind[2][is.na(ind[2])] = nrow(roi); (ind[1]+1):ind[2]}]
+
+        sum(proi$i,na.rm=T)
+      }))
+
+      rbind(components %>% as.matrix, mz, intraw, r = putativerois$r[.roin], m = putativerois$m[.roin], c = Group$cs[seedsdt$n]$c, g = .g, wg = seedsdt$wg) %>% aperm
     }) %>% do.call(what = rbind) %>% data.table
 
     pickbest = function(x) {

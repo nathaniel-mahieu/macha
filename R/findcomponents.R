@@ -61,8 +61,10 @@ findcomponents = function(
   if (is.null(.roil)) .roil =  unique(macha$r$r)
   if (is.numeric(.roil)) {
     roi.job.input = getroi.iter(macha, .roil)
+    groups_run = .roil
   } else {
     roi.job.input = .roil
+    groups_run = seq_along(.roil)
     }
   ngs = length(.roil)
 
@@ -94,7 +96,7 @@ findcomponents = function(
 
   ise = sapply(components, function(x) "error" %in% class(x))
   if (any(ise)) {
-    macha$c_error = components[ise]; names(macha$c_error) = as.character(.roil[ise]); warning(paste0(sum(ise), " component detection errors. (Stored in $c.error.)")) } else { macha = macha[!names(macha) == "c_error"] }
+    macha$c_error = components[ise]; names(macha$c_error) = as.character(groups_run[ise]); warning(paste0(sum(ise), " component detection errors. (Stored in $c.error.)")) } else { macha = macha[!names(macha) == "c_error"] }
 
   ism = sapply(components, function(x) "matrix" %in% class(x))
   macha$c = data.table(do.call(rbind, components[ism]))

@@ -284,7 +284,7 @@ rectwebtrace = function (k, ppm.rect = 8, scan.rect = 4, scan.web = 20, neighbor
   dups = k[,sum(duplicated(s)),by="g"][V1 > 0]
 
   cat("Running webtrace.\n")
-  print.these = sample(seq_len(nrow(dups)), 5)
+  if (is.character(plot.summary)) { print.these = sample(seq_len(nrow(dups)), 5) } else { print.these = 0 }
   for (i in seq_len(nrow(dups))) {
     dg = dups[i]$g
     ksub = k[g == dg]
