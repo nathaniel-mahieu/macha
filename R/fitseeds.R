@@ -19,13 +19,13 @@
 #'
 
 # These should all be in RT
-fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adjust = 1, min.sharpness = 10000, min.fracobs = 0.4, do.plot = F) {
+fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adjust = 1, min.sharpness = 1, min.fracobs = 0.4, do.plot = F) {
   #Make EIC Matrix
   eic = as.matrix(roi)
   setkey(roi, "rt")
 
   meanrtd = mean(diff(roi$rt))
-  min.peakwidth = min.peakwidth / meanrtd
+  min.peakwidth.s = min.peakwidth / meanrtd
 
   if (do.plot) {
     plot(eic[,c("rt","i")], type="l", ylim=c(0,max(eic[,"i"],na.rm=T)))
@@ -67,7 +67,7 @@ fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adj
         })
 
       # Remove terrible fits
-      keeps = qc["wid",] > min.peakwidth/6 & component.mat["factor",] > 0
+      keeps = qc["wid",] > min.peakwidth.s/6 & component.mat["factor",] > 0
       component.mat = component.mat[,keeps,drop=F]
       if (sum(keeps) < 1) { return(NULL) }
 
@@ -86,7 +86,7 @@ fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adj
       stable.tf = length(unique(dists)) == ncol(component.mat) & all(keeps)
       if (stable.tf) {
         #If we have suitably refined peaks return them
-        passrefinement = qc["fracobs",keeps] > min.fracobs & qc["sharpness",keeps] > min.sharpness & qc["obs",keeps] > min.peakwidth
+        passrefinement = qc["fracobs",keeps] > min.fracobs & qc["sharpness",keeps] > min.sharpness & qc["wid",keeps] > min.peakwidth
         if (all(passrefinement)) return(component.mat)
         if (all(!passrefinement)) return(NULL)
 
@@ -241,7 +241,7 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
     v4 = dsn(x, dp = c[1:3])
     wm = which.max(v4)
 
-    se = round(qsn(c(0.05, 0.95), dp = c[1:3]), 2)
+    se = round(qsn(c(0.01, 0.99), dp = c[1:3]), 2)
 
     c(v4[wm]*c[4]+baseline, x[wm], se)
   })
