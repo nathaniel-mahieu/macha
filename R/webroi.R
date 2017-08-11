@@ -6,7 +6,7 @@
 #'
 #' @param k data.table. Three columns: mz, s, k and (optional) g. s is scan, k is a unique integer ID for each peak, g is the initial group assignment.
 #' @param ppm numeric. Mass distance in ppm to consider groups of peaks distinct. (If using a ROI refinement like \code{\link[webtrace]} a generous value is acceptable.) Suggested: 2*"instrument ppm"
-#' @param scan integer. Scan distance to consider groups of peaks distinct. Consider the number of unobserved values to infer were missing. Suggested: 4.
+#' @param scan integer. Scan distance to consider groups of peaks distinct. Consider the number of unobserved values to infer were missing. Suggested: 6.
 #'
 #' @return Integer vector. Each integer is a group assignment. In the same order as supplied k.
 #'
@@ -153,7 +153,7 @@ rectroi = function(k, ppm, scan, plot.summary = F) {
 #'
 
 webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
-  cat("\rWebtrace group:", k$g[[1]])
+  cat("\rWebtrace group:", k$g[[1]], "starting.                                              ")
   k = copy(k)
   korder = k$k
   setkey(k, s, mz)
@@ -213,9 +213,17 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
     
     cat("\rWebtrace group:", k$g[[1]], "-", nrow(storesolv), "conflicts remaining.      ")
     
-    if (nrow(storesolv) < 1) {break}
-
-    mincuts = lapply(seq_len(nrow(storesolv)), function(row) {
+    # Non-ideal time savings
+    storesolv.n = nrow(storesolv)
+    if (storesolv.n < 1) {
+      break
+    } else if (storesolv.n < 60) {
+      resolve_subset = seq_len(storesolv.n)
+    } else {
+      resolve_subset = sample.int(storesolv.n, 60)
+    }
+    
+    mincuts = lapply(resolve_subset, function(row) {
       igraph::max_flow(g, storesolv[row,1], storesolv[row,2])
     })
 
@@ -289,7 +297,7 @@ rectwebtrace = function (k, ppm.rect = 8, scan.rect = 4, scan.web = 20, neighbor
     dg = dups[i]$g
     ksub = k[g == dg]
 
-    cat("                           Resolving conflicting group", i, "of", nrow(dups), "with webtrace.", nrow(ksub), "peaks in group.           ")
+    cat("                      Resolving conflicting group", i, "of", nrow(dups), "with webtrace.", nrow(ksub), "peaks in group.           ")
     
     if (i %in% print.these) {plot.summary2 =paste0(plot.summary, "_", dg) } else {plot.summary2 = F }
     
