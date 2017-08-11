@@ -2,18 +2,19 @@ plot.roi = function(roi) {
   .pardefault <- par(no.readonly = T)
   par(mfrow = c(2,2), mar=c(5,4,1,1)+0.1)
 
-  plot(roi[,.(rt, i)], type="p")
+  plot(roi[,.(rt, i)], type="p", main = roi$r[1])
   lines(roi[,.(rt, ii)], type="l", col="grey")
   lines(roi[,.(rt, bb)], type="l", col="red")
   plot(roi[,.(rt, b)], type="p")
   lines(roi[,.(rt, bb)], type="l", col="grey")
+  lines(roi[,.(rt, i)], type="l", col="blue")
 
   mmz = mean(roi$mz, na.rm=T)
 
   plot(roi[,.(rt, mz)], type="p")
   abline(h = mmz + mmz/1E6, col="red")
   abline(h = mmz - mmz/1E6, col="red")
-  plot(roi[,.(i, mz)], type="p")
+  plot(roi[,.(log10.i = i%>%log10, mz)], type="p")
   abline(h = mmz + mmz/1E6, col="red")
   abline(h = mmz - mmz/1E6, col="red")
 
