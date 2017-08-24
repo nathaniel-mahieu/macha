@@ -62,7 +62,7 @@ rectroi = function(k, ppm, scan, plot.summary = F) {
     ppmrange = k[,.(n = .N, mz = mean(mz), s = mean(s), ppm = diff(range(mz))/mean(mz)*1E6, s = diff(range(s)), dups = sum(duplicated(s)), dupfrac = 2*sum(duplicated(s)) / length(s)),by="g"]
 
     pdf(paste0(plot.summary,"_rectroi.pdf"), height=7, width = 12) #PDF
-    
+
     hist(ppmrange$ppm, breaks = 200, main="ppm range of groups")
     hist(ppmrange$s, breaks = 200, main = "scan range of groups")
     hist(ppmrange$dupfrac %>% log10, main="fraction of peaks whcih are duplicated per group")
@@ -76,8 +76,8 @@ rectroi = function(k, ppm, scan, plot.summary = F) {
       smin = min(kg$s) - 40
       smax = max(kg$s) + 40
       { ggplot(k[mz > mzmin & mz < mzmax & s > smin & s < smax]) + geom_point(aes(y = mz, x = s, colour = duplicated(s))) + geom_text(aes(x = median(s), y = median(mz), label = paste(unique(g), collapse = ", ")), check_overlap = T) + ggtitle("Group with > 30 observations and > 30% duplicated.") + coord_cartesian(xlim = c(smin, smax), ylim = c(mzmin, mzmax)) + theme(legend.position = "none") +
-          geom_segment(aes(yend =mzmin, y = mzmin + mzmin * ppm/1E6, xend = smin+5+0.5*scan, x = smin+5+0.5*scan)) + 
-          geom_segment(aes(yend =mzmin+ mzmin * ppm/1E6*0.5, y = mzmin + mzmin * ppm/1E6*0.5, xend = smin+5, x = smin+5+scan)) 
+          geom_segment(aes(yend =mzmin, y = mzmin + mzmin * ppm/1E6, xend = smin+5+0.5*scan, x = smin+5+0.5*scan)) +
+          geom_segment(aes(yend =mzmin+ mzmin * ppm/1E6*0.5, y = mzmin + mzmin * ppm/1E6*0.5, xend = smin+5, x = smin+5+scan))
       } %>%
         print
     }
@@ -88,49 +88,49 @@ rectroi = function(k, ppm, scan, plot.summary = F) {
       mzmax = max(kg$mz) + 0.01
       smin = min(kg$s) - 40
       smax = max(kg$s) + 40
-      { ggplot(k[mz > mzmin & mz < mzmax & s > smin & s < smax]) + geom_point(aes(y = mz, x = s, colour = factor(g))) + geom_text(aes(x = median(s), y = median(mz), label = g), check_overlap = T) + 
-          ggtitle("Random group with > 30 observations.") + coord_cartesian(xlim = c(smin, smax), ylim = c(mzmin, mzmax)) + theme(legend.position = "none") + 
-          geom_segment(aes(yend =mzmin, y = mzmin + mzmin * ppm/1E6, xend = smin+5+0.5*scan, x = smin+5+0.5*scan)) + 
-          geom_segment(aes(yend =mzmin+ mzmin * ppm/1E6*0.5, y = mzmin + mzmin * ppm/1E6*0.5, xend = smin+5, x = smin+5+scan)) 
+      { ggplot(k[mz > mzmin & mz < mzmax & s > smin & s < smax]) + geom_point(aes(y = mz, x = s, colour = factor(g))) + geom_text(aes(x = median(s), y = median(mz), label = g), check_overlap = T) +
+          ggtitle("Random group with > 30 observations.") + coord_cartesian(xlim = c(smin, smax), ylim = c(mzmin, mzmax)) + theme(legend.position = "none") +
+          geom_segment(aes(yend =mzmin, y = mzmin + mzmin * ppm/1E6, xend = smin+5+0.5*scan, x = smin+5+0.5*scan)) +
+          geom_segment(aes(yend =mzmin+ mzmin * ppm/1E6*0.5, y = mzmin + mzmin * ppm/1E6*0.5, xend = smin+5, x = smin+5+scan))
         } %>% print
     }
-    
+
     mzs = ppmrange[s>100,.(floor(mz/2), floor(s/50))] %>% table %>% { which(. == max(.), arr.ind=T) }
-    
+
 
 
     ks = k[mz > mzs[1]*2 - 0.5*5 & mz < mzs[1]*2 +0.5*5 & s > mzs[2]*50 - 100 & s < mzs[2]*50 + 100]
     rectdt = k[ks[,.SD[.N > 1],by=g][!duplicated(g),.(g)], on="g"][,.(ymin = min(mz), ymax = max(mz), xmin = min(s), xmax = max(s)),by=g]
-    
+
     { ks %>%
       ggplot() + geom_point(aes(y = mz, x = s), size = 0.1) + geom_rect(data=rectdt, fill = NA, aes(colour = factor(g, levels = sample(g)), xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), size = 0.1) +
-      coord_cartesian(xlim = c(min(ks$s), max(ks$s)), ylim = c(min(ks$mz), max(ks$mz))) + theme(legend.position="none") + 
+      coord_cartesian(xlim = c(min(ks$s), max(ks$s)), ylim = c(min(ks$mz), max(ks$mz))) + theme(legend.position="none") +
       ggtitle("Overview of detected rect groups") } %>% print
-   
-    
+
+
     ks = k[mz > mzs[1]*2 - 2*0.5 & mz < mzs[1]*2 +2*0.5 & s > mzs[2]*50 - 100 & s < mzs[2]*50 + 100]
     rectdt = k[ks[,.SD[.N > 1],by=g][!duplicated(g),.(g)], on="g"][,.(ymin = min(mz), ymax = max(mz), xmin = min(s), xmax = max(s)),by=g]
-    
+
     { ks %>%
       ggplot() + geom_point(aes(y = mz, x = s), size = 0.1) + geom_rect(data=rectdt, size = 0.1, fill = NA, aes(colour = factor(g, levels = sample(g)), xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-      coord_cartesian(xlim = c(min(ks$s), max(ks$s)), ylim = c(min(ks$mz), max(ks$mz))) + theme(legend.position="none") + 
+      coord_cartesian(xlim = c(min(ks$s), max(ks$s)), ylim = c(min(ks$mz), max(ks$mz))) + theme(legend.position="none") +
       ggtitle("Overview of detected rect groups") } %>% print
-    
-    
+
+
      ks = k[mz > mzs[1]*2 - 0.5 & mz < mzs[1]*2 +0.5 & s > mzs[2]*50 - 100 & s < mzs[2]*50 + 100]
     rectdt = k[ks[,.SD[.N > 1],by=g][!duplicated(g),.(g)], on="g"][,.(ymin = min(mz), ymax = max(mz), xmin = min(s), xmax = max(s)),by=g]
-    
+
     { ks %>%
       ggplot() + geom_point(aes(y = mz, x = s), size = 0.1) + geom_rect(data=rectdt, size = 0.1, fill = NA, aes(colour = factor(g, levels = sample(g)), xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-      coord_cartesian(xlim = c(min(ks$s), max(ks$s)), ylim = c(min(ks$mz), max(ks$mz))) + theme(legend.position="none")  + 
+      coord_cartesian(xlim = c(min(ks$s), max(ks$s)), ylim = c(min(ks$mz), max(ks$mz))) + theme(legend.position="none")  +
       ggtitle("Overview of detected rect groups") } %>% print
-    
+
     dev.off() #/PDF
   }})
   #/Plots
   ####
 
-  k[,.(k,g)]
+  k[,.(k,r=g)]
   }
 
 
@@ -195,7 +195,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
   # Trim links with high ppm
   #matchdt = matchdt[matchdt$weight > quantile(matchdt$weight, .01)]
   matchdt = matchdt[weight > min(weight)]
-  
+
 
   #Try Min Cut Approaches
   g = igraph::graph.data.frame(matchdt[,.(as.character(v1), as.character(v2), weight)], directed = F, vertices = as.character(k$k))
@@ -206,13 +206,13 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
     o.s[upper.tri(o.s, T)] = F
     storesolv_gs = storesolv = which(o.s, arr.ind = T)
     storesolv_gs[] = storesolv[] = k$k[storesolv] %>% as.character
-    
+
     comps = igraph::membership(igraph::components(g))
     storesolv_gs[] = comps[match(storesolv_gs, names(comps))] %>% as.character
     storesolv = storesolv[storesolv_gs[,1] == storesolv_gs[,2],,drop=F]
-    
+
     cat("\rWebtrace group:", k$g[[1]], "-", nrow(storesolv), "conflicts remaining.      ")
-    
+
     # Non-ideal time savings
     storesolv.n = nrow(storesolv)
     if (storesolv.n < 1) {
@@ -222,7 +222,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
     } else {
       resolve_subset = sample.int(storesolv.n, 60)
     }
-    
+
     mincuts = lapply(resolve_subset, function(row) {
       igraph::max_flow(g, storesolv[row,1], storesolv[row,2])
     })
@@ -230,7 +230,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
     mincutt = lapply(mincuts, function(x) {
       x$cut %>% sapply(as.numeric)
     }) %>% unlist %>% table
-    
+
     delnum = max(3, floor(length(mincutt)/5), sum(mincutt > .5*nrow(storesolv)))
 
     g = igraph::delete.edges(g, head(as.numeric(names(mincutt[order(mincutt, decreasing = T)])), n = delnum))
@@ -240,7 +240,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
   #Plots
   try({if (is.character(plot.summary)) {
     pdf(paste0(plot.summary, "_webtrace.pdf"), width = 12, height = 7)
-    
+
     ids = igraph::membership(igraph::components(g))[match(as.numeric(names(igraph::membership(igraph::components(g)))), k$k)] %>% unname
     k[,g := ids]
 
@@ -298,20 +298,20 @@ rectwebtrace = function (k, ppm.rect = 8, scan.rect = 4, scan.web = 20, neighbor
     ksub = k[g == dg]
 
     cat("                      Resolving conflicting group", i, "of", nrow(dups), "with webtrace.", nrow(ksub), "peaks in group.           ")
-    
+
     if (i %in% print.these) {plot.summary2 =paste0(plot.summary, "_", dg) } else {plot.summary2 = F }
-    
+
     foo = webtrace(ksub, scan.web, neighbors.web, plot.summary = plot.summary2)
 
     #p = profvis({
     #  webtrace(ksub, scan.web, neighbors.web)
     #  })
-    
+
     k[foo, webg := i.g, on="k"]
     i = i+1
   }
   cat("\nCompleted webtrace.")
-  
+
   k[,r:= as.numeric(factor(paste(g, webg)))]
 
 
