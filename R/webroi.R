@@ -1,3 +1,34 @@
+intfactor = function(...) {
+  intl <- list(...)
+
+  powers = sapply(intl, function(x) {
+    c(small=floor(log10(min(x))), big=ceiling(log10(max(x))), len = length(x))
+    })
+
+  if (length(unique(powers["len",])) != 1) stop("Ints must be same length to factor.")
+  #if (length(intl) < 2) stop("Must supply at least two vectors")
+
+  overlap = ( sign(outer(powers["small",], powers["big",], "-")) != sign(outer(powers["big",], powers["small",], "-")) )
+  overlap[upper.tri(overlap, T)] = F
+
+  overlaps = which(overlap, arr.ind=T)
+
+  maxp = max(powers[1:2,])
+  for (r in seq_len(nrow(overlaps))) {
+    intl[[overlaps[r,2]]] = intl[[overlaps[r,2]]] + 10^(maxp+1)
+    maxp = ceiling(log10(max(intl[[overlaps[r,2]]])))
+    }
+
+  x = intl[[1]]
+  for (intv in intl[-1]) {
+    x = x + intv
+    }
+
+  o = order(x)
+  ass = which(diff(x[o])>0)
+  rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))[o]
+  }
+
 #' Split up peaks based on scan and ppm distance.
 #'
 #' \code{rectroi} Splits peaks based on mass and scan spacing. Conceptually, rectangles are drawn around groups of peaks and if rectangles do not overlap peaks are split into distinct groups.
@@ -40,16 +71,20 @@ rectroi = function(k, ppm, scan, plot.summary = F) {
     x = k$mz
 
     ass = c(0, which(diff(x)/x[-1] * 1E6 > ppm), length(x))
-    inds = as.integer(cut(seq_along(x), breaks = ass))
-    k[,g:= as.numeric(factor(paste(g, inds)))]
+    #inds = as.integer(cut(seq_along(x), breaks = ass))
+    inds = rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))
+    #k[,g:= as.numeric(factor(paste(g, inds)))]
+    k[,g:= as.numeric(intfactor(g, inds))]
 
 
     setkey(k, g, s)
     x = k$s
 
     ass = c(0, which(diff(x) > scan), length(x))
-    inds = as.integer(cut(seq_along(x), breaks = ass))
-    k[,g:= as.numeric(factor(paste(g, inds)))]
+    #inds = as.integer(cut(seq_along(x), breaks = ass))
+    inds = rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))
+    #k[,g:= as.numeric(factor(paste(g, inds)))]
+    k[,g:= as.numeric(intfactor(g, inds))]
 
     currgn = max(k$g)
     cat("\rGroup Number:", currgn, "       ")
@@ -162,7 +197,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
 
   #Group to each peak
   matches = lapply(unique(k$s), function(s.i) {
-    subk = copy(k[abs(s-s.i) <= scan])
+    subk = k[abs(s-s.i) <= scan]
 
     d.mz = abs(outer(subk$mz, subk$mz, "-"))
     d.s = abs(outer(subk$s, subk$s, "-")) > 0
@@ -231,7 +266,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
       x$cut %>% sapply(as.numeric)
     }) %>% unlist %>% table
 
-    delnum = max(3, floor(length(mincutt)/5), sum(mincutt > .5*nrow(storesolv)))
+    delnum = max(5, floor(length(mincutt)/5), sum(mincutt > .5*nrow(storesolv)))
 
     g = igraph::delete.edges(g, head(as.numeric(names(mincutt[order(mincutt, decreasing = T)])), n = delnum))
     }
@@ -255,7 +290,7 @@ webtrace = function(k, scan, neighbors = 3, plot.summary=F) {
   #/Plots
   #####
   mem = igraph::membership(components(g))
-  return(data.table(k = as.numeric(names(mem)), g = unname(mem)))
+  return(data.table(k = as.numeric(names(mem)), r = unname(mem)))
   }
 
 
