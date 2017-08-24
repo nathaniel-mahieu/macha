@@ -65,7 +65,7 @@ macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
 
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   start  = Sys.time()
-  bldt = foreach (j=seq_len(nrow(mchans))) %dopar% {
+  bldt = foreach (j=seq_len(nrow(mchans)), .packages = "macha") %dopar% {
     cat(paste0("\r", j, " of ", nms, " mass channels analyzed. (", round(j/nms*100), "%)              "))
 
     range = mchans[j,.(mzmin, mzmax)] %>% as.numeric
