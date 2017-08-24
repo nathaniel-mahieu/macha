@@ -240,8 +240,9 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, const.lower=NULL, const.uppe
   peaks = apply(components, 2, function(c) {
     v4 = dsn(x, dp = c[1:3])
     wm = which.max(v4)
-
-    se = round(qsn(c(0.01, 0.99), dp = c[1:3]), 2)
+    
+    se = c(0,0)
+    try({se = round(qsn(c(0.02, 0.98), dp = c[1:3]), 2)})
 
     c(v4[wm]*c[4]+baseline, x[wm], se)
   })
