@@ -1,9 +1,12 @@
 fastrangedt = function(DT, range, key) {
   if (key(DT) != key) stop("data.table key not set. setkey() for fast subsetting.")
   if (class(DT[[key]]) != class(range)) stop("Class mismatch between range and key column.")
-  if (diff(range) <= 0) return(DT[numeric()])
+  #if (diff(range) <= 0) return(DT[numeric()])
 
-  range[2] = range[2]+10^(-10) #Small error introduced. Necessary to make upper bound inclusive.
+
+
+  if (is.integer(range)) range[2] = range[2] + 1L
+  else range[2] = range[2]+10^(-10) #Small error introduced. Necessary to make upper bound inclusive.
 
   ind <- DT[.(range), which=TRUE, roll=-Inf, rollends=c(F,F)]
 

@@ -50,7 +50,9 @@ macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
   mchans = roisd[,.(mz = mean(mz)),by=mchan][,':='(mzmin = mz - mz*(ppmwin+0.5)/1E6, mzmax = mz + mz*(ppmwin+0.5)/1E6)]
   setkey(mchans, mchan)
 
-  cat("\nExtracting mass channels.\n")  # Put all ROIs into a matrix and baseline together (~20x faster than individual baselining.)
+  dupdt = roisd[,.(dups = sum(duplicated(s)), N=.N),by=mchan]
+  cat("\nMass channels with duplicates:", sum(dupdt$dups>0), "- Fraction of mass channels with duplicates:", round(sum(dupdt$dups>0)/nrow(dupdt),2), "- Fraction of duplicated scans in mass channels with duplicates:", round(mean(dupdt[dups>0, dups/N]),2))
+  cat("\nExtracting mass channels.")  # Put all ROIs into a matrix and baseline together (~20x faster than individual baselining.)
 
   setkey(macha$s, "s")
   setkey(featsd, "mz")
@@ -63,7 +65,7 @@ macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
 
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   start  = Sys.time()
-  foreach (j=seq_len(nrow(mchans))) %dopar% {
+  bldt = foreach (j=seq_len(nrow(mchans))) %dopar% {
     cat(paste0("\r", j, " of ", nms, " mass channels analyzed. (", round(j/nms*100), "%)              "))
 
     range = mchans[j,.(mzmin, mzmax)] %>% as.numeric
@@ -75,36 +77,20 @@ macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
 
     bl = baseline.ahull(x=s.inrange$s, y=trace, a=a, x.var=pw.scan, smooth.n = 5)
 
-    mat[j,as.character(s.inrange$s)] =  bl
-  }
-  cat("\nFinished baselining.", round((Sys.time() - start)/60,1), "minutes.")
+    cbind(s = s.inrange$s, b = bl, mchan = mchans[j, mchan], d = 0)
+  } %>% do.call(what=rbind) %>% data.table
+  cat("\nFinished baselining.", round((Sys.time() - start),1), "minutes.")
 
-  bldt = data.table(b = c(mat), d = rowSums(mat>0, na.rm=T), mchan=as.integer(rownames(mat)), s = rep(as.integer(colnames(mat)), each=nrow(mat)))
+  #bldt = data.table(b = c(mat), d = rowSums(mat>0, na.rm=T), mchan=as.integer(rownames(mat)), s = rep(as.integer(colnames(mat)), each=nrow(mat)))
   macha$k_b = roisd[bldt,.(k,b,d),nomatch=0, on=.(mchan,s)]
   macha$k_b[b<0, b:=0]
-
-  try({if (is.character(plot.summary)) {
-    dt = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k"]
-
-    rlens = dt[,.N,by=r]
-
-    pdf(file=paste0(plot.summary, "_baseline.pdf"), width = 12, height=7)
-    roisd[,.(dups = sum(duplicated(s))),by=mchan]$dups %>% hist(main="Multiple mass peaks per scan in each mass channel for baselining.")
-    roisd[,.(dups = sum(duplicated(s))),by=mchan][dups > 0]$dups %>% hist(main="Multiple mass peaks per scan in each mass channel for baselining.")
-
-    for (.r in sample(rlens[N > quantile(N, 0.9)]$r, 20)) {
-      { dt[r == .r] %>% ggplot() + geom_line(aes(x = s, y = i)) + geom_line(aes(x = s, y = b), colour = "red") + ggtitle("Example Long Baseline", paste0("ROI ID: ", .r)) } %>% print
-    }
-    for (.r in sample(rlens[N < quantile(N, 0.75)]$r, 20)) {
-      { dt[r == .r] %>% ggplot() + geom_line(aes(x = s, y = i)) + geom_line(aes(x = s, y = b), colour = "red") + ggtitle("Example Short Baseline", paste0("ROI ID: ", .r)) } %>% print
-    }
-    dev.off()
-  }})
 
   macha
 }
 
 baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
+
+  if (length(y) < 5) { warning("Not enough points to calculate baseline.  Returning supplied points."); return(y) }
 
   # Remove isolated, low points
   k = min(ceiling(length(y)*0.25), 20)
@@ -113,10 +99,10 @@ baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
   # Smooth
   y.sm = filter_all_the_way_down(y, smooth.n)
 
-  if (is.null(y.var)) y.var = quantile(abs(y-y.sm) %>% { .[.>0] }, 0.8)[[1]]
+  if (is.null(y.var)) y.var = quantile(abs(y-y.sm) %>% { .[.>1] }, 0.8)[[1]]
 
   # Find alpha-hull and return only bottom of hull
-  abp = ahull_bottom(x/x.var, y.sm/(y.var*10), a=a, do.plot=F)
+  abp = ahull_bottom(x=x/x.var, y=y.sm/(y.var*10), a=a, do.plot=F)
 
   # Points to include in baseline estimation: within our variance of the bottom of the hull
   reasonbl = which(abs(y - approx(x[abp], y[abp], x)$y) < y.var/2)
@@ -196,6 +182,6 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
     nokeep.posstall
   ) %>% unique
 
-
+  if (length(nokeep)==0) return(dt[, c("ind1", "ind2")] %>% unlist %>% unique)
   dt[-nokeep, c("ind1", "ind2")] %>% unlist %>% unique
 }
