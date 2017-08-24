@@ -27,5 +27,6 @@ Suggests:
 	warpgroup
 Imports:
   TTR,
-  signal
+  signal,
+  alphahull
 RoxygenNote: 6.0.0
