@@ -23,7 +23,7 @@ rawdata = function(file, splits = NULL) {
     stop("Package 'mzR' needed for this function to work. Please install it.", call. = FALSE)
     }
 
-  library(mzR)
+  suppressWarnings(suppressMessages(library(mzR)))
 
   ramp = mzR:::rampOpen(file)
   data = mzR:::rampRawData(ramp)
@@ -53,7 +53,7 @@ rawdata = function(file, splits = NULL) {
     }
 
   data$acquisitionNum = seq_along(data$acquisitionNum)
-  
+
   list(
     s = data.table(data.frame(s = data$acquisitionNum, rt = data$rt, polarity = data$polarity)),
     k = data.table(data.frame(mz = data$mz, i = data$intensity, s = rep(data$acquisitionNum, diff(c(data$scanindex, length(data$mz)))), k = seq_along(data$mz))),
