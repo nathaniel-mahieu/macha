@@ -113,7 +113,7 @@ rectroi = function(k, ppm, scan) {
 #'
 
 webtrace = function(k, scan, neighbors = 3) {
-  cat("\rWebtrace group:", k$g[[1]], "starting.                                              ")
+  cat("\rWebtrace group:", k$r[[1]], "starting.                                              ")
   k = copy(k)
   korder = k$k
   setkey(k, s, mz)
@@ -171,7 +171,7 @@ webtrace = function(k, scan, neighbors = 3) {
     storesolv_gs[] = comps[match(storesolv_gs, names(comps))] %>% as.character
     storesolv = storesolv[storesolv_gs[,1] == storesolv_gs[,2],,drop=F]
 
-    cat("\rWebtrace group:", k$g[[1]], "-", nrow(storesolv), "conflicts remaining.      ")
+    cat("\rWebtrace group:", k$r[[1]], "-", nrow(storesolv), "conflicts remaining.      ")
 
     # Non-ideal time savings
     storesolv.n = nrow(storesolv)

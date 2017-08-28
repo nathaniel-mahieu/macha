@@ -26,63 +26,30 @@
 
 macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
   cat("\nStarted baselining.")
-
-  featsd = macha$k[,.(mz, s, i)]
-  roisd = macha$k[macha$k_r,,on="k"]
-
-  # Aggregate ROIs which are close in mass but possibly separate in retention time.
-  cat("\nAggregating mass channels.")
-  massdt = roisd[,.(meanmz = mean(mz)),by=r]
-  setkey(massdt, meanmz)
-
-  jumps = diff(massdt$meanmz) / massdt$meanmz[-1] * 1E6
-  massdt[,gs:=cumsum(c(0,jumps) > ppmwin - 0.5) + 1]
-
-  granges = massdt[,.(grange = diff(range(meanmz))/mean(meanmz)*1E6),by=gs]
-
-  for (gn in granges[grange > ppmwin]$gs) {
-    massdt[gs == gn, gs := max(massdt$gs) + 1 + seq_along(gs)]
-  }
-
-  massdt[,mchan:=as.numeric(factor(gs))]
-  roisd[massdt, mchan := mchan, on="r"]
-
-  mchans = roisd[,.(mz = mean(mz)),by=mchan][,':='(mzmin = mz - mz*(ppmwin+0.5)/1E6, mzmax = mz + mz*(ppmwin+0.5)/1E6)]
-  setkey(mchans, mchan)
-
-  dupdt = roisd[,.(dups = sum(duplicated(s)), N=.N),by=mchan]
-  cat("\nMass channels with duplicates:", sum(dupdt$dups>0), "- Fraction of mass channels with duplicates:", round(sum(dupdt$dups>0)/nrow(dupdt),2), "- Fraction of duplicated scans in mass channels with duplicates:", round(mean(dupdt[dups>0, dups/N]),2))
-  cat("\nExtracting mass channels.")  # Put all ROIs into a matrix and baseline together (~20x faster than individual baselining.)
-
-  setkey(macha$s, "s")
-  setkey(featsd, "mz")
-  mat = matrix(ncol = max(macha$s$s), nrow = nrow(mchans), dimnames = list(mchans$mchan, macha$s$s))
-
-  cat("\nCalculating baselines.")
-
-  nms = nrow(mchans)
-
-
-  cat("\nProcessing backend used for foreach(baselines):", getDoParName())
+  cat("\nFilling mass trace gaps.")
+  
+  traces = macha$k[macha$k_r[macha$r_mchan,,on="r"],,on="k"][,.(k,s,i,mchan)]
+  setkey(traces, "mchan","s")
+  traces = traces[,.SD[macha$s[,.(s)],,roll=T, rollends=F, on="s", nomatch=0],by="mchan"]
+  traces[duplicated(k), k:= NA] 
+  
+  setkey(traces, "mchan","s")
+  trace.l = split(traces, by="mchan")
+  
+  cat("\nProcessing backend used for foreach(baselines):\n", getDoParName())
   start  = Sys.time()
-  bldt = foreach (j=seq_len(nrow(mchans)), .packages = "macha") %dopar% {
-    cat(paste0("\r", j, " of ", nms, " mass channels analyzed. (", round(j/nms*100), "%)              "))
+  nms = length(trace.l)
+  bldt = foreach (trace=trace.l[1:100], i = icount(), .packages = "macha") %dopar% {
+    cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
+    
+    bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)
 
-    range = mchans[j,.(mzmin, mzmax)] %>% as.numeric
-
-    m.inrange = fastrangedt(featsd, range, "mz")
-    s.inrange = fastrangedt(macha$s, range(m.inrange$s), "s")
-
-    trace = m.inrange[s.inrange, sum(i, na.rm=T), roll=T, on="s", mult="all", by=.EACHI]$V1
-
-    bl = baseline.ahull(x=s.inrange$s, y=trace, a=a, x.var=pw.scan, smooth.n = 5)
-
-    cbind(s = s.inrange$s, b = bl, mchan = mchans[j, mchan], d = 0)
+    cbind(s = trace$s, b = bl, mchan = trace$mchan, d = 0)
   } %>% do.call(what=rbind) %>% data.table
   cat("\nFinished baselining.", round((Sys.time() - start),1), "minutes.")
 
   #bldt = data.table(b = c(mat), d = rowSums(mat>0, na.rm=T), mchan=as.integer(rownames(mat)), s = rep(as.integer(colnames(mat)), each=nrow(mat)))
-  macha$k_b = roisd[bldt,.(k,b,d),nomatch=0, on=.(mchan,s)]
+  macha$k_b = traces[bldt,.(k,b,d),nomatch=0, on=.(mchan,s)][!is.na(k)]
   macha$k_b[b<0, b:=0]
 
   macha
