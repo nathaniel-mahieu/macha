@@ -39,7 +39,7 @@ macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
   cat("\nProcessing backend used for foreach(baselines):\n", getDoParName())
   start  = Sys.time()
   nms = length(trace.l)
-  bldt = foreach (trace=trace.l[1:100], i = icount(), .packages = "macha", .combine = rbind) %dopar% {
+  bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .combine = rbind) %dopar% {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
     
     bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)

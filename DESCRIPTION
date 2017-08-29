@@ -22,11 +22,12 @@ Depends:
   gridExtra,
   dbscan
 Suggests:
-	mzR,
 	xcms,
 	warpgroup
 Imports:
   TTR,
   signal,
-  alphahull
+  alphahull,
+  extrafont, hrbrthemes, ggrepel,
+  mzR
 RoxygenNote: 6.0.0
