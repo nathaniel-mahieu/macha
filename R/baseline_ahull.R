@@ -29,7 +29,7 @@ macha.baseline.ahull = function(macha, pw.scan, a) {
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   cat("\nFilling mass trace gaps.")
   
-  traces = macha$k[macha$k_r[macha$r_mchan,,on="r"],,on="k"][,.(k,s,i,mchan)]
+  traces = macha$k[macha$k_r,,on="k",nomatch=0][macha$r_mchan,,on="r",nomatch=0][,.(k,s,i,mchan)]
   setkey(traces, "mchan","s")
   traces = traces[,.SD[macha$s[,.(s)],,roll=T, rollends=F, on="s", nomatch=0],by="mchan"]
   traces[duplicated(k), k:= NA] 
@@ -44,8 +44,8 @@ macha.baseline.ahull = function(macha, pw.scan, a) {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
     
     bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)
-
-    data.table(s = trace$s, b = bl, mchan = trace$mchan, d = 0)
+    
+    data.table(s = trace$s, b = bl, mchan = trace$mchan, d = rep(0,length(trace$s)))
   }
   cat("\nFinished baselining.", round(((Sys.time() - start)/60),1), "minutes.")
 
