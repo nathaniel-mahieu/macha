@@ -1,6 +1,15 @@
 intfactor = function(...) {
   intl <- list(...)
-
+  
+  if (!all(sapply(intl, class) == "integer")) {
+    warning("Coerced supplied vectors to integers.")
+    intl = lapply(intl, as.integer)
+  }
+  if (any(unlist(intl) %>% is.na)) {
+    warning("Filled NA values")
+    intl = lapply(intl, function(x) { x[is.na(x)] = max(x,na.rm=T) + 1; x })
+  }
+  
   powers = sapply(intl, function(x) {
     c(small=floor(log10(min(x))), big=ceiling(log10(max(x))), len = length(x))
     })
@@ -8,14 +17,16 @@ intfactor = function(...) {
   if (length(unique(powers["len",])) != 1) stop("Ints must be same length to factor.")
   #if (length(intl) < 2) stop("Must supply at least two vectors")
 
-  overlap = ( sign(outer(powers["small",], powers["big",], "-")) != sign(outer(powers["big",], powers["small",], "-")) )
+  o1 = outer(powers["small",], powers["big",], "-")
+  o2 = outer(powers["big",], powers["small",], "-")
+  overlap = ( sign(o1) != sign(o2) ) & o1 != 0
   overlap[upper.tri(overlap, T)] = F
 
   overlaps = which(overlap, arr.ind=T)
 
   maxp = max(powers[1:2,])
   for (r in seq_len(nrow(overlaps))) {
-    intl[[overlaps[r,2]]] = intl[[overlaps[r,2]]] + 10^(maxp+1)
+    intl[[overlaps[r,2]]] = intl[[overlaps[r,2]]] * 10^(maxp+1)
     maxp = ceiling(log10(max(intl[[overlaps[r,2]]])))
     }
 
@@ -26,7 +37,7 @@ intfactor = function(...) {
 
   o = order(x)
   ass = which(diff(x[o])>0)
-  rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))[o]
+  rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))[order(o)]
   }
 
 #' Split up peaks based on scan and ppm distance.
@@ -114,7 +125,6 @@ rectroi = function(k, ppm, scan) {
 
 webtrace = function(k, scan, neighbors = 3) {
   cat("\rWebtrace group:", k$r[[1]], "starting.                                              ")
-  k = copy(k)
   korder = k$k
   setkey(k, s, mz)
 
