@@ -24,8 +24,9 @@
 #' @export
 #'
 
-macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
+macha.baseline.ahull = function(macha, pw.scan, a) {
   cat("\nStarted baselining.")
+  cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   cat("\nFilling mass trace gaps.")
   
   traces = macha$k[macha$k_r[macha$r_mchan,,on="r"],,on="k"][,.(k,s,i,mchan)]
@@ -36,10 +37,10 @@ macha.baseline.ahull = function(macha, pw.scan, a, ppmwin=3, plot.summary=F) {
   setkey(traces, "mchan","s")
   trace.l = split(traces, by="mchan")
   
-  cat("\nProcessing backend used for foreach(baselines):\n", getDoParName())
+
   start  = Sys.time()
   nms = length(trace.l)
-  bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .combine = rbind) %dopar% {
+  bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .errorhandling = "stop", .combine=rbind, .options.redis=list(chunkSize=50)) %dopar% {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
     
     bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)
@@ -75,8 +76,17 @@ baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
   reasonbl = which(abs(y - approx(x[abp], y[abp], x)$y) < y.var/2)
 
 
-  df = diff(range(x))/x.var/5 # spline df: number of possible features/4
-  bb = predict(smooth.spline(x[reasonbl], y[reasonbl], df = df, spar = 0.4)$fit, x)$y
+  npts = length(reasonbl)
+  if (npts > 4) {
+    df = diff(range(x))/x.var/5 # spline df: number of possible features/4
+    bb = predict(smooth.spline(x[reasonbl], y[reasonbl], df = df, spar = 0.4)$fit, x)$y
+  } else if (npts == 1) {
+    bb = rep(y[reasonbl],length(x))
+  } else if (npts == 0) {
+    bb = rep(NA, length(x))
+  } else {
+    bb = approx(x[reasonbl], y[reasonbl], xout = x)$y  
+    }
 
   if (do.plot) {
     roi = data.table(rt = x, ii = y, bb = bb)
