@@ -201,6 +201,7 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
 
   remaining[,':='(end = F, byend = F)]
   
+  ends = (remaining[,.(ind1, ind2)] %>% unlist %>% table) %>% { names(.[.==1]) } %>% as.numeric
   remaining[ind1 %in% ends | ind2 %in% ends, end := T]
   minx = min(c(remaining$x1, remaining$x2))
   maxx = max(c(remaining$x1, remaining$x2))
