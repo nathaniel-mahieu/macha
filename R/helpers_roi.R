@@ -47,7 +47,7 @@ makeroicache = function(macha) {
   setkey(macha$roi_cache, r, s)
   rolledmacha = macha$roi_cache[,.SD[macha$s,,roll=T, rollends=F, on="s", nomatch=0],by="r"]
   
-  macha$roi_cache = macha$roi_cache[rolledmacha[,.(s,rt,r,polarity,ii = i, bb = b)],,on=c("r", "s")]
+  macha$roi_cache = macha$roi_cache[rolledmacha[,.(s,rt,r,polarity,ii = i, bb = b, vv = v)],,on=c("r", "s")]
   setkey(macha$roi_cache, "r", "s")
-  macha$roi_cache[,.(s, k, r, rt, i, mz, b, d, ii, bb, polarity)]
+  macha$roi_cache[,.(s, k, r, rt, i, mz, b, d, v, ii, bb, vv, polarity)]
   }

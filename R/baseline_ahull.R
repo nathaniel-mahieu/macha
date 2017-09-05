@@ -45,16 +45,39 @@ macha.baseline.ahull = function(macha, pw.scan, a) {
     
     bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)
     
-    data.table(s = trace$s, b = bl, mchan = trace$mchan, d = rep(0,length(trace$s)))
+    data.table(s = trace$s, b = bl[,"bb"], v = bl[,"v"], mchan = trace$mchan, d = rep(0,length(trace$s)))
   }
   cat("\nFinished baselining.", round(((Sys.time() - start)/60),1), "minutes.")
 
   #bldt = data.table(b = c(mat), d = rowSums(mat>0, na.rm=T), mchan=as.integer(rownames(mat)), s = rep(as.integer(colnames(mat)), each=nrow(mat)))
-  macha$k_b = traces[bldt,.(k,b,d),nomatch=0, on=.(mchan,s)][!is.na(k)]
+  macha$k_b = traces[bldt,.(k,b,d,v),nomatch=0, on=.(mchan,s)][!is.na(k)]
   macha$k_b[b<0, b:=0]
 
   macha
 }
+
+variance_est = function(y.d) {
+  n = 31
+  
+  if (length(y.d) < (n+3)){
+    n = floor((length(y.d)-2)/2)
+    }
+    
+    
+  y.d.q = zoo::rollapply(abs(y.d) %>% { .[.<1] = NA; . }, n, quantile, 0.8, fill=NA, na.rm=T)
+  fnna = which(!is.na(y.d.q))[1]
+  lnna = which(!is.na(y.d.q)) %>% tail(n=1)
+  y.d.q[1:(fnna-1)] = y.d.q[fnna]
+  y.d.q[(lnna+1):length(y.d)] = y.d.q[lnna]
+  
+  
+  ydq.f = filter(y.d.q, rep(1/n, n))
+  fnna = which(!is.na(ydq.f))[1]
+  lnna = which(!is.na(ydq.f)) %>% tail(n=1)
+  ydq.f[1:(fnna-1)] = ydq.f[fnna]
+  ydq.f[(lnna+1):length(y.d)] = ydq.f[lnna]
+  ydq.f %>% as.numeric
+  }
 
 baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
 
@@ -66,14 +89,17 @@ baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
 
   # Smooth
   y.sm = filter_all_the_way_down(y, smooth.n)
+  y.d = y - y.sm
 
-  if (is.null(y.var)) y.var = quantile(abs(y-y.sm) %>% { .[.>1] }, 0.8)[[1]]
+  y.v = variance_est(y.d)
+    
+  if (!is.null(y.var)) y.v = rep(y.v, length(y.sm))
 
   # Find alpha-hull and return only bottom of hull
-  abp = ahull_bottom(x=x/x.var, y=y.sm/(y.var*10), a=a, do.plot=F)
+  abp = ahull_bottom(x=x/x.var, y=y.sm/(y.v*10), a=a, do.plot=F)
 
   # Points to include in baseline estimation: within our variance of the bottom of the hull
-  reasonbl = which(abs(y - approx(x[abp], y[abp], x)$y) < y.var/2)
+  reasonbl = which(abs(y - approx(x[abp], y[abp], x)$y) < y.v/2)
 
 
   npts = length(reasonbl)
@@ -93,7 +119,7 @@ baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
     print(ggplot(roi) + geom_line(aes(x=rt, y=ii)) + geom_point(data = roi[abp], aes(x=rt, y=ii), colour="red")+ geom_point(data = roi[reasonbl], aes(x=rt, y=ii), colour="blue", alpha = 0.2) +geom_line(aes(x=rt, y=bb), colour="red"))
     }
 
-  bb
+  cbind(bb=bb, v = y.v)
   }
 
 filter_all_the_way_down = function(x, n) {

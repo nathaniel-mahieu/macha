@@ -1,15 +1,17 @@
 makemchans = function(macha, ppmwin = 3, rtwin = 30) {
   cat("\nAggregating mass channels and reconstructing traces.\n")
-  setkey(macha$r, "meanmz")
   
-  mchans = macha$r$r
+  mr = macha$k[macha$s,,on="s"][macha$k_r,,on="k"][, .(minrt = min(rt), maxrt = max(rt), meanmz = mean(sum(mz*i)/sum(i)), maxmz = max(mz), minmz = min(mz)),by=r] 
+  setkey(mr, "meanmz")
+  mr = mr %>% as.matrix
+  mr.nrow = nrow(mr)
+  massspans = mr[,"meanmz"] %>% { diff(.)/.[-1]*1E6 } %>% cumsum
+  
+  mchans = mr[,"r"]
   maxmchan = max(mchans)
   laststartmass = lastmchan = i = 0
   startmass = 1
   
-  mr = macha$r %>% as.matrix
-  mr.nrow = nrow(mr)
-  massspans = mr[,"meanmz"] %>% { diff(.)/.[-1]*1E6 } %>% cumsum
   #profvis::profvis({
   while(startmass <= length(massspans) + 1) {
     
@@ -25,15 +27,15 @@ makemchans = function(macha, ppmwin = 3, rtwin = 30) {
     
     o1 = outer(ts[,"maxrt"], ts[,"minrt"], "-")
     o2 = outer(ts[,"minrt"], ts[,"maxrt"], "-")
-    overlap = ( sign(o1) != sign(o2) ) & ( o1 != 0 & o2 != 0 )
+    overlap = ( sign(o1) != sign(o2) ) #& ( o1 != 0 & o2 != 0 )
     dist = outer(ts[,"maxrt"], ts[,"minrt"], "-")
     
     samemchan = outer(mchans[mchans.tf], mchans[mchans.tf], "==") %>% { .[upper.tri(., T)] = NA; . } %>% which(arr.ind=T)
     for (r in seq_len(nrow(samemchan))) {
       overlap[samemchan[r,1],] = overlap[samemchan[r,1],] | overlap[,samemchan[r,2]]
       overlap[samemchan[r,2],] = overlap[samemchan[r,2],] | overlap[,samemchan[r,1]]
-      #overlap[,samemchan[r,1]] = overlap[,samemchan[r,1]] | overlap[samemchan[r,2],]
-      #overlap[,samemchan[r,2]] = overlap[,samemchan[r,2]] | overlap[samemchan[r,1],]
+      overlap[,samemchan[r,1]] = overlap[,samemchan[r,1]] | overlap[samemchan[r,2],]
+      overlap[,samemchan[r,2]] = overlap[,samemchan[r,2]] | overlap[samemchan[r,1],]
     }
     overlap = overlap %>% { .[upper.tri(., T)] = NA; . }
     
