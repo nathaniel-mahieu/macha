@@ -5,9 +5,10 @@ makemchans = function(macha, ppmwin = 3, rtwin = 30) {
   setkey(mr, "meanmz")
   mr = mr %>% as.matrix
   mr.nrow = nrow(mr)
-  massspans = mr[,"meanmz"] %>% { diff(.)/.[-1]*1E6 } %>% cumsum
+  massspans = mr[,"meanmz"] %>% { c(0,diff(.))/.*1E6 } %>% cumsum
   
   mchans = mr[,"r"]
+  rs = mr[,"r"]
   maxmchan = max(mchans)
   laststartmass = lastmchan = i = 0
   startmass = 1
@@ -17,7 +18,6 @@ makemchans = function(macha, ppmwin = 3, rtwin = 30) {
     
     cons = { massspans - massspans[startmass] } %>% { . >= 0 & . < ppmwin } %>% which
     mchans.tf = mchans %in% mchans[cons]
-    mchans.active = mchans[mchans.tf]
     ts = mr[mchans.tf,,drop=F]
     if (nrow(ts) < 2) { startmass = startmass + 1; next }
     
@@ -45,6 +45,7 @@ makemchans = function(macha, ppmwin = 3, rtwin = 30) {
     
     #update = mchans %in% ts[pmerg[which.min(dist),],"mchan"]
     update = mchans[mchans.tf] %in% mchans[mchans.tf][pmerg[which.min(dist.v),]]
+    #ts[update,]
     
     if (!any(update)) { 
       startmass = startmass + 1 
@@ -54,6 +55,6 @@ makemchans = function(macha, ppmwin = 3, rtwin = 30) {
       }
   }
   #})
-  macha$r_mchan = data.table(r=macha$r$r, mchan = mchans)
+  macha$r_mchan = data.table(r=rs, mchan = mchans)
   macha
 }

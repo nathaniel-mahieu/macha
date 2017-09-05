@@ -185,6 +185,37 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
     nokeep.posstall
   ) %>% unique
 
-  if (length(nokeep)==0) return(dt[, c("ind1", "ind2")] %>% unlist %>% unique)
-  dt[-nokeep, c("ind1", "ind2")] %>% unlist %>% unique
+  if (do.plot) {
+    plot(ah)
+    
+    points(dt[-nokeep,.(x1, y1)],col="red")
+    points(dt[-nokeep,.(x2, y2)],col="red")
+  }
+  
+  
+  if (length(nokeep)==0) {
+    remaining = dt
+  } else {
+    remaining = dt[-nokeep]
+  }
+
+  remaining[,':='(end = F, byend = F)]
+  
+  remaining[ind1 %in% ends | ind2 %in% ends, end := T]
+  minx = min(c(remaining$x1, remaining$x2))
+  maxx = max(c(remaining$x1, remaining$x2))
+  remaining[x1 == minx | x2 == minx, byend := T]
+  remaining[x1 == maxx | x2 == maxx, byend := T]
+  
+  remaining = remaining[!(end == T & byend == T)]
+  
+  if (do.plot) {
+    plot(ah)
+    
+    points(remaining[,.(x1, y1)],col="red")
+    points(remaining[,.(x2, y2)],col="red")
+  }
+  
+  if (nrow(remaining)==0) return(dt[, c("ind1", "ind2")] %>% unlist %>% unique)
+  remaining[, c("ind1", "ind2")] %>% unlist %>% unique
 }
