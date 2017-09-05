@@ -69,7 +69,7 @@ variance_est = function(y.d) {
   lnna = which(!is.na(y.d.q)) %>% tail(n=1)
   y.d.q[1:(fnna-1)] = y.d.q[fnna]
   y.d.q[(lnna+1):length(y.d)] = y.d.q[lnna]
-  
+  y.d.q[is.na(y.d.q)] = mean(y.d.q, na.rm=T)
   
   ydq.f = filter(y.d.q, rep(1/n, n))
   fnna = which(!is.na(ydq.f))[1]
