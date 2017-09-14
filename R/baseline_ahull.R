@@ -28,23 +28,23 @@ macha.baseline.ahull = function(macha, pw.scan, a) {
   cat("\nStarted baselining.")
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   cat("\nFilling mass trace gaps.")
-  
+
   traces = macha$k[macha$k_r,,on="k",nomatch=0][macha$r_mchan,,on="r",nomatch=0][,.(k,s,i,mchan)]
   setkey(traces, "mchan","s")
   traces = traces[,.SD[macha$s[,.(s)],,roll=T, rollends=F, on="s", nomatch=0],by="mchan"]
-  traces[duplicated(k), k:= NA] 
-  
+  traces[duplicated(k), k:= NA]
+
   setkey(traces, "mchan","s")
   trace.l = split(traces, by="mchan")
-  
+
 
   start  = Sys.time()
   nms = length(trace.l)
   bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .errorhandling = "stop", .combine=rbind, .options.redis=list(chunkSize=50)) %dopar% {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
-    
+
     bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)
-    
+
     data.table(s = trace$s, b = bl[,"bb"], v = bl[,"v"], mchan = trace$mchan, d = rep(0,length(trace$s)))
   }
   cat("\nFinished baselining.", round(((Sys.time() - start)/60),1), "minutes.")
@@ -58,19 +58,19 @@ macha.baseline.ahull = function(macha, pw.scan, a) {
 
 variance_est = function(y.d) {
   n = 31
-  
+
   if (length(y.d) < (n+3)){
     n = floor((length(y.d)-2)/2)
     }
-    
-    
+
+
   y.d.q = zoo::rollapply(abs(y.d) %>% { .[.<1] = NA; . }, n, quantile, 0.8, fill=NA, na.rm=T)
   fnna = which(!is.na(y.d.q))[1]
   lnna = which(!is.na(y.d.q)) %>% tail(n=1)
   y.d.q[1:(fnna-1)] = y.d.q[fnna]
   y.d.q[(lnna+1):length(y.d)] = y.d.q[lnna]
   y.d.q[is.na(y.d.q)] = mean(y.d.q, na.rm=T)
-  
+
   ydq.f = filter(y.d.q, rep(1/n, n))
   fnna = which(!is.na(ydq.f))[1]
   lnna = which(!is.na(ydq.f)) %>% tail(n=1)
@@ -82,9 +82,9 @@ variance_est = function(y.d) {
 baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=11, do.plot = F) {
 
   if (length(y) < 5) { warning("Not enough points to calculate baseline.  Returning supplied points."); return(y) }
-  if (smooth.n > length(y)) smooth.n = length(y) 
+  if (smooth.n > length(y)) smooth.n = length(y)
   smooth.n = smooth.n %>% { . + (. %% 2-1) }
-  
+
   # Remove isolated, low points
   k = min(ceiling(length(y)*0.25), 20)
   y = which(y == -zoo::rollmax(-y, k, fill=NA)) %>% { y[.] = rowSums(cbind(y[.-1], y[.+1], na.rm=T))/2; y }
@@ -94,11 +94,12 @@ baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=11, do.plot = F) 
   y.d = y - y.sm
 
   y.v = variance_est(y.d)
-    
+
   if (!is.null(y.var)) y.v = rep(y.v, length(y.sm))
 
   # Find alpha-hull and return only bottom of hull
-  abp = ahull_bottom(x=x/x.var, y=y.sm/(y.v*10), a=a, do.plot=F)
+  #abp = ahull_bottom(x=x/x.var, y=y.sm/(y.v*10), a=a, do.plot=T)
+  abp = ahull_bottom(x=x/x.var, y=y.sm/(mean(y.v)*10), a=a, do.plot=T)
 
   # Points to include in baseline estimation: within our variance of the bottom of the hull
   reasonbl = which(abs(y - approx(x[abp], y[abp], x)$y) < y.v/2)
@@ -113,7 +114,7 @@ baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=11, do.plot = F) 
   } else if (npts == 0) {
     bb = rep(NA, length(x))
   } else {
-    bb = approx(x[reasonbl], y[reasonbl], xout = x)$y  
+    bb = approx(x[reasonbl], y[reasonbl], xout = x)$y
     }
 
   if (do.plot) {
@@ -189,12 +190,12 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
 
   if (do.plot) {
     plot(ah)
-    
+
     points(dt[-nokeep,.(x1, y1)],col="red")
     points(dt[-nokeep,.(x2, y2)],col="red")
   }
-  
-  
+
+
   if (length(nokeep)==0) {
     remaining = dt
   } else {
@@ -202,23 +203,23 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
   }
 
   remaining[,':='(end = F, byend = F)]
-  
+
   ends = (remaining[,.(ind1, ind2)] %>% unlist %>% table) %>% { names(.[.==1]) } %>% as.numeric
   remaining[ind1 %in% ends | ind2 %in% ends, end := T]
   minx = min(c(remaining$x1, remaining$x2))
   maxx = max(c(remaining$x1, remaining$x2))
   remaining[x1 == minx | x2 == minx, byend := T]
   remaining[x1 == maxx | x2 == maxx, byend := T]
-  
+
   remaining = remaining[!(end == T & byend == T)]
-  
+
   if (do.plot) {
     plot(ah)
-    
+
     points(remaining[,.(x1, y1)],col="red")
     points(remaining[,.(x2, y2)],col="red")
   }
-  
+
   if (nrow(remaining)==0) return(dt[, c("ind1", "ind2")] %>% unlist %>% unique)
   remaining[, c("ind1", "ind2")] %>% unlist %>% unique
 }
