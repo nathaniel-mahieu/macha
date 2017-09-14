@@ -1,6 +1,6 @@
 
 
-macha.baseline.ahull.bak = function(macha, pw.scan, a) {
+macha.baseline.ahull = function(macha, pw.scan, a) {
   cat("\nStarted baselining.")
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   cat("\nFilling mass trace gaps.")
@@ -55,7 +55,7 @@ variance_est = function(y.d) {
   ydq.f %>% as.numeric
   }
 
-baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=11, do.plot = F) {
+baseline.ahull.bak = function(x, y, a, x.var, y.var=NULL, smooth.n=11, do.plot = F) {
 
   if (length(y) < 5) { warning("Not enough points to calculate baseline.  Returning supplied points."); return(y) }
   if (smooth.n > length(y)) smooth.n = length(y)
