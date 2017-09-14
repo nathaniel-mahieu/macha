@@ -1,6 +1,6 @@
 
 
-macha.baseline.ahull = function(macha, pw.scan, a) {
+macha.baseline.ahull = function(macha, pw.scan, a, long.n = 150) {
   cat("\nStarted baselining.")
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   cat("\nFilling mass trace gaps.")
@@ -19,7 +19,7 @@ macha.baseline.ahull = function(macha, pw.scan, a) {
   bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .errorhandling = "stop", .combine=rbind, .options.redis=list(chunkSize=50)) %dopar% {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
 
-    bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5)
+    bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5, long.n = 150, do.plot=F)
 
     data.table(s = trace$s, b = bl[,"bb"], v = bl[,"v"], mchan = trace$mchan, d = rep(0,length(trace$s)))
   }
