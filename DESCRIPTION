@@ -20,6 +20,9 @@ Depends:
   igraph,
   ggplot2,
   gridExtra,
+  ggrepel,
+  hrbrthemes,
+  extrafont,
   dbscan
 Suggests:
 	xcms,
@@ -28,6 +31,5 @@ Imports:
   TTR,
   signal,
   alphahull,
-  extrafont, hrbrthemes, ggrepel,
   mzR
 RoxygenNote: 6.0.0
