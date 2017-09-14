@@ -7,9 +7,10 @@
 #' @param roi Matrix. Rows are observed mass peaks. Columns named "mz", "rt", "s", "b", "i".  Column "b" is the baseline at that point.
 #' @param S Integer vector. The smoothing scales to apply when searching for peaks.
 #' @param seed.maxdist Integer. The maximum distance in scans the local maximum of the smoothed trace can travel and still positively reinforce a peak.
-#' @param seed.sn.adjust Numeric. Multiplied by the signal to noise limit.  The limit is variable but a value of 1 here corresponds to a SN range of 1.5 to 2.5.  See below.
 #' @param seed.minwidth Numeric. Minimum width in scans of a putative region to be returned as a seed.
-#' @param noisy.chan.n Integer. The number of scans a mass-channel must be observed in to be assigned the maximum SN limit.  Defaults to 0.8*total.scans
+#' @param seed.maxdensity Float. Maximum density in which to seed peaks in peaks/scan. Eg 1/5.
+#' @param seed.sn.perpeak Numeric vector. Indices of the vector correspond to the number of observations which must be made of the mass in the peak region defined by seed.sn.range. The value at each index defines the minimum intensity necessary for an observation to count in value * baseline. Eg. c(Inf, 10) means a seed with only 1 observation will not be returned whereas a seed with 2 observations at 10*baseline will pass. 
+#' @param seed.sn.range Integer. Range in scans around a peak loci in which to look for observations qualifying as in seed.sn.perpeak.
 #' @param do.plot Boolean. Plot a bunch of random things.
 #'
 #'
@@ -21,7 +22,7 @@
 #'
 
 #These should all be in RT
-seedpeaks = function(roi, S=3:8, seed.maxdensity = 1/5, seed.maxdist=4, seed.sn.perpeak = c(Inf, 50, 5, 3, 2), seed.sn.range = 2, seed.sn.adjust = 1, seed.minwidth = 3, do.plot=F) {
+seedpeaks = function(roi, S=3:8, seed.maxdensity = 1/5, seed.maxdist=4, seed.sn.perpeak = c(Inf, 50, 5, 3, 2), seed.sn.range = 2, seed.minwidth = 3, do.plot=F) {
   # roi = data.table with: factored rt, i, b, d
 
   nullresult = matrix(nrow = 0, ncol = 3, dimnames=list(NULL, c("start", "end", "peak")))
@@ -69,7 +70,6 @@ seedpeaks = function(roi, S=3:8, seed.maxdensity = 1/5, seed.maxdist=4, seed.sn.
   multbl[is.na(multbl)] = 0
   plocisn[] = multbl[plocisn]
 
-  seed.sn.perpeak = seed.sn.perpeak * seed.sn.adjust
   keep.sn = matrixStats::rowAnys(sapply(seq_along(seed.sn.perpeak), function (i) {
     rowSums(plocisn > seed.sn.perpeak[i]) >= i
   }) %>% { if (is.null(dim(.))) { dim(.) = c(nrow(plocisn), length(seed.sn.perpeak)) }; . })

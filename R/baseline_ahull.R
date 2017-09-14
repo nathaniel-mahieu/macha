@@ -79,13 +79,15 @@ variance_est = function(y.d) {
   ydq.f %>% as.numeric
   }
 
-baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=5, do.plot = F) {
+baseline.ahull = function(x, y, a, x.var, y.var=NULL, smooth.n=11, do.plot = F) {
 
   if (length(y) < 5) { warning("Not enough points to calculate baseline.  Returning supplied points."); return(y) }
-
+  if (smooth.n > length(y)) smooth.n = length(y) 
+  smooth.n = smooth.n %>% { . + (. %% 2-1) }
+  
   # Remove isolated, low points
   k = min(ceiling(length(y)*0.25), 20)
-  which(y == -zoo::rollmax(-y, k, fill=NA)) %>% { y[.] = rowSums(cbind(y[.-1], y[.+1], na.rm=T))/2 }
+  y = which(y == -zoo::rollmax(-y, k, fill=NA)) %>% { y[.] = rowSums(cbind(y[.-1], y[.+1], na.rm=T))/2; y }
 
   # Smooth
   y.sm = filter_all_the_way_down(y, smooth.n)

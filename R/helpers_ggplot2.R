@@ -39,17 +39,6 @@ fancy_scientific <- function(l) {
 }
 
 
-extrafont::loadfonts(device="pdf")
-extrafont::loadfonts(device="postscript")
-#extrafont::fonttable()
-#extrafont::font_import("C:/Windows/Fonts/", pattern = "RobotoCondensed", prompt = F)
-#C:/Program Files/R/R-3.3.1/library/extrafontdb/fontmap/
-#Change lights to "Roboto Condensed Light"
-#After ggsave(device="pdf") open and resave the file in Illustrator
-library(gridExtra)
-library(hrbrthemes)
-library(ggplot2)
-library(ggrepel)
 theme_nate <- function(...)
 {
   theme_ipsum_rc(...) %+replace%
@@ -57,9 +46,15 @@ theme_nate <- function(...)
       panel.background = element_rect(fill="white", colour = "white"),
       panel.grid.major = element_line(colour="grey90"),
       panel.grid.minor = element_line(colour="grey95"),
-      
+
       legend.position="top",
       legend.key = element_blank()
     )
 }
-theme_set(theme_nate())
+
+plotting_start = function() {
+  extrafont::loadfonts(device="pdf")
+  extrafont::loadfonts(device="postscript")
+
+  theme_set(theme_nate())
+  }
