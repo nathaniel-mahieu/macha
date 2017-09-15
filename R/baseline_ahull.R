@@ -16,7 +16,11 @@ macha.baseline.ahull = function(macha, pw.scan, a, long.n = 150) {
 
   start  = Sys.time()
   nms = length(trace.l)
-  bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .errorhandling = "stop", .combine=rbind, .options.redis=list(chunkSize=50)) %dopar% {
+  output = foreach (
+    trace=trace.l, i = icount(), .packages = "macha",
+    .options.redis=list(chunkSize=50),
+    .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(trace.l))
+    ) %dopar% {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
 
     bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5, long.n = 150, do.plot=T)
@@ -24,6 +28,9 @@ macha.baseline.ahull = function(macha, pw.scan, a, long.n = 150) {
     data.table(s = trace$s, b = bl[,"bb"], v = bl[,"v"], mchan = trace$mchan, d = rep(0,length(trace$s)))
   }
   cat("\nFinished baselining.", round(((Sys.time() - start)/60),1), "minutes.")
+
+  bldt = output$list
+  macha$k_b_error = output$error
 
   #bldt = data.table(b = c(mat), d = rowSums(mat>0, na.rm=T), mchan=as.integer(rownames(mat)), s = rep(as.integer(colnames(mat)), each=nrow(mat)))
   macha$k_b = traces[bldt,.(k,b,d,v),nomatch=0, on=.(mchan,s)][!is.na(k)]
