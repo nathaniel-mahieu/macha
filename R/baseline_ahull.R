@@ -19,7 +19,7 @@ macha.baseline.ahull = function(macha, pw.scan, a, long.n = 150) {
   bldt = foreach (trace=trace.l, i = icount(), .packages = "macha", .errorhandling = "stop", .combine=rbind, .options.redis=list(chunkSize=50)) %dopar% {
     cat(paste0("\r", i, " of ", nms, " mass channels analyzed. (Fraction: ", round(i/nms, 4), ")              "))
 
-    bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5, long.n = 150, do.plot=F)
+    bl = baseline.ahull(x=trace$s, y=trace$i, a=a, x.var=pw.scan, smooth.n = 5, long.n = 150, do.plot=T)
 
     data.table(s = trace$s, b = bl[,"bb"], v = bl[,"v"], mchan = trace$mchan, d = rep(0,length(trace$s)))
   }
@@ -114,6 +114,16 @@ filter_all_the_way_down = function(x, n) {
 
 ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated to finding the bottom of the hull - faster way?
 
+  overlap_taller = function(r1, r2) {
+    xs = c(r1[3], r1[5], r2[3], r2[5])
+    seg = xs[order(xs)[2:3]]
+
+    h1 = sum(r1[4] + (r1[6]-r1[4])/(r1[5]-r1[3]) * (seg - r1[3]))
+    h2 = sum(r2[4] + (r2[6]-r2[4])/(r2[5]-r2[3]) * (seg - r2[3]))
+
+    which.max(c(h1, h2))
+  }
+
   ah = alphahull::ashape(x, y, a)
   dt = data.table(ah$edges)
   if (do.plot) plot(ah)
@@ -144,18 +154,10 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
   nokeep.posstall = numeric()
   if(nrow(too_do) > 0) {
     nokeep.posstall = apply(too_do, 1, function(pair) {
-      r1 = dt2[pair[1]]
-      r2 = dt2[pair[1]]
+      r1 = dt2[pair[1],]
+      r2 = dt2[pair[2],]
 
-      xs = c(r1[3], r1[5], r2[3], r2[5])
-      seg = xs[order(xs)[2:3]]
-
-
-
-      h1 = sum(r1[4] + (r1[6]-r1[4])/(r1[5]-r1[3]) * (seg - r1[3]))
-      h2 = sum(r2[4] + (r2[6]-r2[4])/(r2[5]-r2[3]) * (seg - r2[3]))
-
-      pair[which.max(c(h1, h2))]
+      pair[overlap_taller(r1, r2)]
     })
   }
 
@@ -167,6 +169,8 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
   if (do.plot) {
     plot(ah)
 
+    points(dt[nokeep,.(x1, y1)],col="blue")
+    points(dt[nokeep,.(x2, y2)],col="blue")
     points(dt[-nokeep,.(x1, y1)],col="red")
     points(dt[-nokeep,.(x2, y2)],col="red")
   }
@@ -178,16 +182,20 @@ ahull_bottom = function(x,y, a=3, do.plot=F) { # Almost all of this is dedicated
     remaining = dt[-nokeep]
   }
 
-  remaining[,':='(end = F, byend = F)]
+  remaining[,':='(end = F, start=F, remove = F)]
 
-  ends = (remaining[,.(ind1, ind2)] %>% unlist %>% table) %>% { names(.[.==1]) } %>% as.numeric
-  remaining[ind1 %in% ends | ind2 %in% ends, end := T]
-  minx = min(c(remaining$x1, remaining$x2))
-  maxx = max(c(remaining$x1, remaining$x2))
-  remaining[x1 == minx | x2 == minx, byend := T]
-  remaining[x1 == maxx | x2 == maxx, byend := T]
+  ends = c(remaining[remaining[,x2] %>% which.min,ind2], remaining[remaining[,x1] %>% which.max,ind1])
+  remaining[ind1 == ends[2], end := T]
+  remaining[ind2 == ends[1], start := T]
 
-  remaining = remaining[!(end == T & byend == T)]
+  if (sum(remaining$start) > 1) {
+    inty = overlap_taller(remaining[start==T,][1] %>% unlist, remaining[start==T,][2] %>% unlist)
+    remaining[start==T][inty][,remove:=T]
+    }
+  if (sum(remaining$end) > 1) {
+    inty = overlap_taller(remaining[end==T,][1]%>% unlist, remaining[end==T,][2] %>% unlist)
+    remaining[end==T][inty][,remove:=T]
+  }
 
   if (do.plot) {
     plot(ah)
