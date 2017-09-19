@@ -23,8 +23,7 @@ Depends:
   ggrepel,
   hrbrthemes,
   extrafont,
-  dbscan,
-  mzR
+  dbscan
 Suggests:
 	xcms,
 	warpgroup
@@ -32,5 +31,6 @@ Imports:
   TTR,
   signal,
   alphahull,
-  zoo
+  zoo,
+  mzR
 RoxygenNote: 6.0.0
