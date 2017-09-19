@@ -4,7 +4,7 @@
 \alias{baseline}
 \title{Estimate the baseline for each m/z channel}
 \usage{
-baseline(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6)
+baseline(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6, plot.summary = F)
 }
 \arguments{
 \item{macha}{Macha list containing list items k and s.}

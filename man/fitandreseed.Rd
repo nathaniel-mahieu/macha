@@ -5,7 +5,7 @@
 \title{Find a set of parameterized curves which describe the ROI well}
 \usage{
 fitandreseed(roi, seeds, unrelated.dist = 30, min.peakwidth = 3,
-  sn.adjust = 1, min.sharpness = 10000, min.fracobs = 0.4, do.plot = F)
+  sn.adjust = 1, min.sharpness = 1, min.fracobs = 0.4, do.plot = F)
 }
 \arguments{
 \item{roi}{data.table. ROI}

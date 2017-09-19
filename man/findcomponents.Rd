@@ -4,37 +4,20 @@
 \alias{findcomponents}
 \title{Analyze ROIs for retention-time-domain peaks satisfying parameters}
 \usage{
-findcomponents(macha, .roil = NULL, S = 3:8, seed.maxdensity = 1/10,
-  seed.maxdist = 4, seed.sn.perpeak = c(Inf, 10, 5, 3, 2),
-  seed.sn.range = 2, seed.sn.adjust = 1, seed.minwidth = 3,
-  unrelated.dist = 30, min.peakwidth, sn.adjust.comp = 1, min.sharpness,
-  min.fracobs = 0.4, do.plot = F)
+findcomponents(macha, unrelated.dist = 40, min.peakwidth = 3,
+  min.sharpness = 2, min.fracobs = 0.4)
 }
 \arguments{
-\item{S}{The smoothing scales to apply when searching for peaks. Dependent on the amount of signal variation.  Suggested values: smooth peaks, 1:3; rough peaks, 3:(1/2 peakwidth in scans)}
-
-\item{seed.maxdensity}{The maximum density at which to seed peaks in units of peaks/scan. Suggested value: 1/(One third the peak width in scans)}
-
-\item{seed.maxdist}{Integer. The maximum distance in scans the local maximum of the smoothed trace can travel and still positively reinforce a peak. Suggested value: One quarter the peak width in scans}
-
-\item{seed.sn.perpeak}{Required signal to noise (intensity/baseline) for a seed to be retained.  Each index of the vector corresponds to the number of peaks needed above the specified level.  c(Inf, 50, 10) requires a single point to be 50 times the baseline but a peak with three observed scans to be 10x the baseline.}
-
-\item{seed.sn.range}{Integer. The number of scans around a seed to look for peaks satisfying the signal to noise limits
-
-The following parameters control the fitting process:}
-
-\item{seed.minwidth}{Numeric. Minimum width in scans of a putative region to be returned as a seed.}
-
 \item{unrelated.dist}{Integer. The distance two seeds must be apart to fit them individually (much faster). Suggested value: large peakwidth * 3}
 
 \item{min.peakwidth}{numeric. The minimum width a component can be to be retained. In seconds.}
 
-\item{min.sharpness}{numeric. A lower limit on peak.height/peak.width.  Units Intensity/Second.}
+\item{min.sharpness}{numeric. A lower limit on peak.height/peak.width.  Units Intensity/Second. (Not very diagnostic.)}
 
 \item{min.fractionobs}{numeric. A lower limit on the fraction of expected observations present in the peak region.}
 }
 \value{
-List (a Macha object) containing additional list named c containing detected components and the parameters of the skew normal distribution describing that component.
+List (a Macha object) containing additional list named $c containing detected components and the parameters of the skew normal distribution describing that component. (and $c_error)
 }
 \description{
 \code{findcomponents} Sequentially analyzes detected ROIs for peaks. This proceeds by several steps.
@@ -45,20 +28,4 @@ List (a Macha object) containing additional list named c containing detected com
 3. Distributions within \code{unrelated.dist} of each other are fit simultaneously to the raw data.
 4. Fit distributions are checked by the supplied parameters and peaks not satisfying those parameters are removed.  The distribution is then refit.
 5. This repeats until the fit distributions stabilize.
-
-The following parameters control the seeding process:
-}
-\examples{
-\dontrun{
-#Can run this locally in parallel to speed processing.  Avoids lots of network IO for each job and caches progress in case of a bug or interruption.
-.roil = foreach(r = unique(macha$r$r), .packages="macha") \%dopar\% {
-  nextElem(getroi.iter(macha, r))
-  }
-macha = findcomponents(
-  macha, .roil = .roil,
-  S = 3:7, seed.maxdensity=1/7, seed.maxdist=4, seed.sn.perpeak =c(Inf, 10, 7, 3, 2.5, 2), seed.sn.range = 3, seed.sn.adjust = 1, seed.minwidth = 4,
-  unrelated.dist = 40, min.peakwidth = 3, sn.adjust.comp = 1, min.sharpness = 6E3, min.fracobs = .4, do.plot = F
-)
-}
-
 }
