@@ -17,10 +17,18 @@ plot.components = function(macha, roin) {
   })
 }
 
-plot.components2 = function(macha, .r = NULL) {
+plot.components2 = function(macha, .r = NULL, includetrace = F) {
 
+  if (includetrace) {
+    rs. = macha$r_mchan[mchan==macha$r_mchan[r==.r,mchan],r]
+    roi = macha$roi_cache[r %in% rs.]
+    
+    peaks = macha$c[r%in%rs.]
+    
+    } else {
   roi = getroi(macha, .r)
   peaks = macha$c[r==.r]
+    }
   peaks[,label:=numeric()]
 
 
@@ -39,11 +47,13 @@ plot.components2 = function(macha, .r = NULL) {
     }
 
 
-  ggplot(roi[,.(rt,ii,bb)], aes(x=rt)) + geom_line(aes(y=ii), alpha = 0.5) + geom_line(aes(y=bb), colour="red", alpha = 0.5, size = 0.5) +
-    geom_line(data=peakcurves, aes(x=rt, y=ii, colour = c), size = 0.8) +
+  ggplot(roi[,.(rt,ii,bb)], aes(x=rt)) + 
+    geom_line(aes(y=ii), colour = "grey", alpha = 1, size = 0.4) + 
+    geom_line(aes(y=bb), colour="wheat2", alpha = 1, size = 0.5) +
+    geom_line(data=peakcurves, aes(x=rt, y=ii, colour = c), size = 0.5, alpha = 0.8) +
     theme(legend.position="none") +
     ggtitle(paste0("ROI Number: ", .r, ". ", nrow(peaks), " peaks.")) +
-    geom_label_repel(data = peaks, aes(location, intpeak, colour=c, label=label), nudge_y = 0.25*max(roi$ii,na.rm=T), box.padding = unit(1, "lines"))
+    geom_label_repel(data = peaks, aes(location, intpeak, colour=c, label=label), nudge_y = 0.25*max(roi$ii,na.rm=T), box.padding = unit(0.25, "lines"), size = 3, alpha = 0.5)
 
 
   }

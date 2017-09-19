@@ -36,7 +36,16 @@ getroi = function(macha, roi.id) {
   }
 
 
-
+#' Compile ROIs
+#'
+#' \code{makeroicache} Compiles ROIs rolling missing values and aggregating baselines and other calculated information.
+#' 
+#' @param macha macha.
+#' 
+#' @return data.table
+#'
+#' @export
+#'
 makeroicache = function(macha) {
   macha$roi_cache = macha$k[macha$k_r,,on="k"]
   

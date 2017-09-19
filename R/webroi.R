@@ -50,7 +50,7 @@ intfactor = function(...) {
 #' @param ppm numeric. Mass distance in ppm to consider groups of peaks distinct. (If using a ROI refinement like \code{\link[webtrace]} a generous value is acceptable.) Suggested: 2*"instrument ppm"
 #' @param scan integer. Scan distance to consider groups of peaks distinct. Consider the number of unobserved values to infer were missing. Suggested: 6.
 #'
-#' @return Integer vector. Each integer is a group assignment. In the same order as supplied k.
+#' @return data.table. Column r denoting the roi assignment for mass peak k.
 #'
 #' @seealso \code{\link[webtrace]}
 #'
@@ -108,7 +108,9 @@ rectroi = function(k, ppm, scan) {
 
 #' Split up peaks based on weighted graph of nearby mass observations
 #'
-#' \code{webtrace} Splits peaks based on mass and scan spacing. A graph is formed by linking masses of nearest m/z values within a scan window.  The mincut of the graph which segregates conflicting ROIs (two mass peaks in a single scan) is determined.  The graph is iteratively cut until no conflicts remain.
+#' \code{webtrace} Performs refinement of high resolution ROIs correcting errors due to nearby peaks, peaks coelescence, and multiple peaks per scan.
+#' 
+#' Splits peaks based on mass and scan spacing. A graph is formed by linking masses of nearest m/z values within a scan window.  The mincut of the graph which segregates conflicting ROIs (two mass peaks in a single scan) is determined.  The graph is iteratively cut until no conflicts remain.
 #'
 #' Functional as a slower, robust ROI detection sensitive to shifts in mass. Necessary for high resolution and high-variance mass data.
 #'

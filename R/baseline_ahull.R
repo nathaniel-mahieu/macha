@@ -1,6 +1,26 @@
+#' Estimate the baseline for each m/z channel
+#'
+#' \code{macha.baseline.ahull} estimates the baseline using the convex alpha-hull of the mass trace
+#'
+#' Developed to robustly estimate baselines in a variety of situations. Primarily: 1. cases where the baseline is not always observed, as in QE data; 2. Cases where a single ROI does not capture a large enough region to estimate the baseline.
+#' To achieve this, ROIs of similar mass are grouped based on \code{ppmwin}. For each ROI group all the signal throughout the dataset is aggregated into an EIC. This EIC roll-joined, such that 0 values are filled with the last observed intensity. From this EIC a baseline is estimated.
+#' Estimation is performed using th alpha-hull of the trace to identify points to be considered as baseline - points within the variance of the interpolated alpha-hull are included in a spline fit to the baseline.
+#'
+#' @param macha macha.
+#' @param pw.scan Numeric. Scales the x-dimension making the baseline less sensitive to rises on the scale of pw.scan.  For example, when multiple peaks elute the baseline may disappear (rise) for 3 or three peak widths.  Recommended: 2-3 * peakwidth near baseline in scans.
+#' @param a Numeric. Scales both the X and Y dimenstions as above.  Recommended: 2.5
+#' @param long.n Integer. Length of trace before extra filters for noisy channels is applies.  Filtering excludes points which could be due to ion suppression.
+#'
+#' @return data.table with columns bb and v.
+#'
+#' @seealso \code{\link[alphahull::ashape]}
+#'
+#'
+#' @export
+#'
 
 
-macha.baseline.ahull = function(macha, pw.scan, a, long.n = 150) {
+macha.baseline.ahull = function(macha, pw.scan, a=2.5, long.n = 150) {
   cat("\nStarted baselining.")
   cat("\nProcessing backend used for foreach(baselines):", getDoParName())
   cat("\nFilling mass trace gaps.")

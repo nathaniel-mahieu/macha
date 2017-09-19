@@ -1,3 +1,19 @@
+
+#' Reconstruct ROIs split due to missing observations
+#'
+#' \code{makemchans} Find's ROIs which are likely the same mass channel.
+#'
+#' Combining ROIs which were previously split due to missing values or conflicts in the webtrace step allows more complete information to be supplied to the baselining step.
+#'
+#' @param macha macha. Three columns: mz, s, k and (optional) g. s is scan, k is a unique integer ID for each peak, g is the initial group assignment.
+#' @param ppmwin numeric. Mass distance in ppm to disqualify ROI aggregation. Recommended: instrument_ppm
+#' @param rtwin numeric. RT distance in seconds to disqualify ROI aggregation. Recommended: 1/5 of run length
+#'
+#' @return macha. macha object with additional item $r_mchan
+#'
+#'
+#' @export
+#'
 makemchans = function(macha, ppmwin = 3, rtwin = 30) {
   cat("\nAggregating mass channels and reconstructing traces.\n")
   

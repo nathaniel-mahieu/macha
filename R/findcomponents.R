@@ -1,15 +1,3 @@
-getroi.iter = function(macha, .roil) {
-  it <- iter(.roil)
-
-  nextEl = function() {
-    getroi(macha, roi.id=nextElem(it))
-  }
-
-  obj <- list(nextElem=nextEl)
-  class(obj) <- c('ixts', 'abstractiter', 'iter')
-  obj
-  }
-
 #' Analyze ROIs for retention-time-domain peaks satisfying parameters
 #'
 #' \code{findcomponents} Sequentially analyzes detected ROIs for peaks. This proceeds by several steps.
@@ -22,46 +10,35 @@ getroi.iter = function(macha, .roil) {
 #'
 #' @param unrelated.dist Integer. The distance two seeds must be apart to fit them individually (much faster). Suggested value: large peakwidth * 3
 #' @param min.peakwidth numeric. The minimum width a component can be to be retained. In seconds.
-#' @param min.sharpness numeric. A lower limit on peak.height/peak.width.  Units Intensity/Second.
+#' @param min.sharpness numeric. A lower limit on peak.height/peak.width.  Units Intensity/Second. (Not very diagnostic.)
 #' @param min.fractionobs numeric. A lower limit on the fraction of expected observations present in the peak region.
 #'
-#' @return List (a Macha object) containing additional list named c containing detected components and the parameters of the skew normal distribution describing that component.
+#' @return List (a Macha object) containing additional list named $c containing detected components and the parameters of the skew normal distribution describing that component. (and $c_error)
 #'
-#' @examples
-#' \dontrun{
-#' #Can run this locally in parallel to speed processing.  Avoids lots of network IO for each job and caches progress in case of a bug or interruption.
-#' .roil = foreach(r = unique(macha$r$r), .packages="macha") %dopar% {
-#'   nextElem(getroi.iter(macha, r))
-#'   }
-#' macha = findcomponents(
-#'   macha, .roil = .roil,
-#'   S = 3:7, seed.maxdensity=1/7, seed.maxdist=4, seed.sn.perpeak =c(Inf, 10, 7, 3, 2.5, 2), seed.sn.range = 3, seed.sn.adjust = 1, seed.minwidth = 4,
-#'   unrelated.dist = 40, min.peakwidth = 3, sn.adjust.comp = 1, min.sharpness = 6E3, min.fracobs = .4, do.plot = F
-#' )
-#' }
 #'
 #' @export
 #'
 findcomponents = function(
   macha,
-  unrelated.dist = 30, min.peakwidth, sn.adjust.comp = 1, min.sharpness, min.fracobs = 0.4,
-  do.plot=F
+  unrelated.dist = 40, min.peakwidth = 3, min.sharpness=2, min.fracobs = 0.4
   ) {
   cat("\nStarting component detection.\n")
   if (!"seeds" %in% names(macha)) { stop("Findcomponents requires peak seeds in macha$seeds.") }
+
+  seed.l = split(macha$seeds, by="r")
+  r. = unique(macha$seeds[,.(r)])
+  roi.l = split(macha$roi_cache[r.,,on="r",nomatch=0], by="r")
   
-  
-  groups_run = unique(macha$seeds$r)
-  components = foreach (r.r = groups_run, .errorhandling = "pass", .packages=c("macha"), .options.redis=list(chunkSize=50)) %dopar% {
-    cat("\r", r.r)
+  output = foreach (
+    roi = roi.l[names(seed.l)], seeds.dt = seed.l,
+    .packages="macha", .options.redis=list(chunkSize=50),
+    .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(seed.l))
+  ) %dopar% {
     
-    roi = getroi(macha, r.r)
-    seeds = macha$seeds[r==r.r,1:3] %>% as.matrix
+    seeds = seeds.dt[,1:3] %>% as.matrix
+    components = fitandreseed(roi, seeds, unrelated.dist = unrelated.dist, min.peakwidth = min.peakwidth, min.sharpness= min.sharpness, min.fracobs = min.fracobs, do.plot=F) %>% do.call(what=cbind)
     
-    components = fitandreseed(roi, seeds, unrelated.dist = unrelated.dist, min.peakwidth = min.peakwidth, sn.adjust = sn.adjust.comp, min.sharpness= min.sharpness, min.fracobs = min.fracobs, do.plot=do.plot)
-    
-    components = do.call(cbind, components)
-    if (is.null(components)) { return(NULL) }
+    if (!is.matrix(components)) return(NULL)
     
     mz = c(apply(components, 2, function(x) {
       range = c(x["rtmin"], x["rtmax"])
@@ -70,21 +47,13 @@ findcomponents = function(
       sum(matrixStats::rowProds(proi[,.(mz, i)] %>% as.matrix),na.rm=T)/sum(proi$i,na.rm=T)
     }))
     
-    rbind(components, mz, r = roi$r[[1]]) %>% aperm
+    rbind(components, mz, r = roi$r[[1]]) %>% aperm %>% data.table
   }
   
-  ise = sapply(components, function(x) "error" %in% class(x))
-  if (any(ise)) {
-    macha$c_error = components[ise]; names(macha$c_error) = as.character(groups_run[ise]); warning(paste0(sum(ise), " component detection errors. (Stored in $c.error.)")) } else { macha = macha[!names(macha) == "c_error"] 
-    }
+  macha$c = output$list
+  macha$c_error = output$error
   
-  ism = sapply(components, function(x) "matrix" %in% class(x))
-  macha$c = data.table(do.call(rbind, components[ism]))
-  if (nrow(macha$c) > 0) macha$c[,c:=seq_len(nrow(macha$c))]
-  
-  isn = sapply(components, is.null)
-  
-  if (any(!(ise | ism | isn))) warning(paste0(sum(!(ise | ism | isn)), " rois discarded. This is a bug."))
+  macha$c[,c:=seq_along(macha$c$mz)]
   
   cat("\nFinished component detection.\n\n")
   macha
