@@ -13,7 +13,7 @@
 #'
 #' @return data.table with columns bb and v.
 #'
-#' @seealso \code{\link[alphahull::ashape]}
+#' @seealso \code{\link{alphahull::ashape}}
 #'
 #'
 #' @export

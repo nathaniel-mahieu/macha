@@ -35,5 +35,5 @@ Matrix. Columns "start", "end", "peak", correspond to the indices of the peak an
 Used to provide an initialization for further peak modeling and component recovery.
 }
 \seealso{
-\code{\link[sspp]}
+\code{\link{sspp}}
 }

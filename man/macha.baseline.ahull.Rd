@@ -27,5 +27,5 @@ To achieve this, ROIs of similar mass are grouped based on \code{ppmwin}. For ea
 Estimation is performed using th alpha-hull of the trace to identify points to be considered as baseline - points within the variance of the interpolated alpha-hull are included in a spline fit to the baseline.
 }
 \seealso{
-\code{\link[alphahull::ashape]}
+\code{\link{alphahull::ashape}}
 }

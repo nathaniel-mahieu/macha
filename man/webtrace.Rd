@@ -25,5 +25,5 @@ Splits peaks based on mass and scan spacing. A graph is formed by linking masses
 Functional as a slower, robust ROI detection sensitive to shifts in mass. Necessary for high resolution and high-variance mass data.
 }
 \seealso{
-\code{\link[rectroi]}
+\code{\link{rectroi}}
 }

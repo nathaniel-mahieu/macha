@@ -7,12 +7,12 @@
 #'
 #' @param macha Macha list containing list items k and s.
 #' @param ppmwin Numeric. The ppm window within which to sum to denote the baseline.
-#' @param lambda1,lambda2 Integer. See \code{\link[baseline::baseline.irls]}
+#' @param lambda1,lambda2 Integer. See \code{\link{baseline::baseline.irls}}
 #'
 #'
 #' @return List (a Macha object) containing additional list named k_b containing the calculated baseline intensity at every mass peak. (Note that this refers to peak IDs much like a relational database.)
-#' 
-#' @seealso \code{\link[baseline::baseline.irls]}
+#'
+#' @seealso \code{\link{baseline::baseline.irls}}
 #'
 #' @examples
 #' \dontrun{
@@ -32,12 +32,12 @@ baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6, plot.summary=F)
   cat("\nAggregating mass channels.")
   massdt = roisd[,.(meanmz = mean(mz)),by=r]
   setkey(massdt, meanmz)
-  
+
   jumps = diff(massdt$meanmz) / massdt$meanmz[-1] * 1E6
   massdt[,gs:=cumsum(c(0,jumps) > ppmwin - 0.5) + 1]
-  
+
   granges = massdt[,.(grange = diff(range(meanmz))/mean(meanmz)*1E6),by=gs]
-  
+
   for (gn in granges[grange > ppmwin]$gs) {
     massdt[gs == gn, gs := max(massdt$gs) + 1 + seq_along(gs)]
   }
@@ -83,13 +83,13 @@ baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6, plot.summary=F)
 
   try({if (is.character(plot.summary)) {
     dt = macha$k[macha$k_r,,on="k"][macha$k_b,,on="k"]
-    
+
     rlens = dt[,.N,by=r]
 
-    pdf(file=paste0(plot.summary, "_baseline.pdf"), width = 12, height=7)    
+    pdf(file=paste0(plot.summary, "_baseline.pdf"), width = 12, height=7)
     roisd[,.(dups = sum(duplicated(s))),by=mchan]$dups %>% hist(main="Multiple mass peaks per scan in each mass channel for baselining.")
     roisd[,.(dups = sum(duplicated(s))),by=mchan][dups > 0]$dups %>% hist(main="Multiple mass peaks per scan in each mass channel for baselining.")
-    
+
     for (.r in sample(rlens[N > quantile(N, 0.9)]$r, 20)) {
       { dt[r == .r] %>% ggplot() + geom_line(aes(x = s, y = i)) + geom_line(aes(x = s, y = b), colour = "red") + ggtitle("Example Long Baseline", paste0("ROI ID: ", .r)) } %>% print
     }
@@ -98,6 +98,6 @@ baseline = function(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6, plot.summary=F)
     }
     dev.off()
   }})
-  
+
   macha
 }

@@ -28,5 +28,5 @@ Functional as a slower, robust ROI detection sensitive to shifts in mass. Necess
 See other functions for parameter definitions.
 }
 \seealso{
-\code{\link[rectroi]} \code{\link[webtrace]}
+\code{\link{rectroi}} \code{\link{webtrace}}
 }

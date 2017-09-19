@@ -11,7 +11,7 @@ baseline(macha, ppmwin = 3, lambda1 = 3, lambda2 = 6, plot.summary = F)
 
 \item{ppmwin}{Numeric. The ppm window within which to sum to denote the baseline.}
 
-\item{lambda1, lambda2}{Integer. See \code{\link[baseline::baseline.irls]}}
+\item{lambda1, lambda2}{Integer. See \code{\link{baseline::baseline.irls}}}
 }
 \value{
 List (a Macha object) containing additional list named k_b containing the calculated baseline intensity at every mass peak. (Note that this refers to peak IDs much like a relational database.)
@@ -30,5 +30,5 @@ baseline(macha, ppmwin = 3, lambda1 = 6, lambda2 = 7)
 
 }
 \seealso{
-\code{\link[baseline::baseline.irls]}
+\code{\link{baseline::baseline.irls}}
 }

@@ -1,6 +1,6 @@
 intfactor = function(...) {
   intl <- list(...)
-  
+
   if (!all(sapply(intl, class) == "integer")) {
     warning("Coerced supplied vectors to integers.")
     intl = lapply(intl, as.integer)
@@ -9,7 +9,7 @@ intfactor = function(...) {
     warning("Filled NA values")
     intl = lapply(intl, function(x) { x[is.na(x)] = max(x,na.rm=T) + 1; x })
   }
-  
+
   powers = sapply(intl, function(x) {
     c(small=floor(log10(min(x))), big=ceiling(log10(max(x))), len = length(x))
     })
@@ -47,12 +47,12 @@ intfactor = function(...) {
 #' Functional as a fast, first pass ROI grouping.
 #'
 #' @param k data.table. Three columns: mz, s, k and (optional) g. s is scan, k is a unique integer ID for each peak, g is the initial group assignment.
-#' @param ppm numeric. Mass distance in ppm to consider groups of peaks distinct. (If using a ROI refinement like \code{\link[webtrace]} a generous value is acceptable.) Suggested: 2*"instrument ppm"
+#' @param ppm numeric. Mass distance in ppm to consider groups of peaks distinct. (If using a ROI refinement like \code{\link{webtrace}} a generous value is acceptable.) Suggested: 2*"instrument ppm"
 #' @param scan integer. Scan distance to consider groups of peaks distinct. Consider the number of unobserved values to infer were missing. Suggested: 6.
 #'
 #' @return data.table. Column r denoting the roi assignment for mass peak k.
 #'
-#' @seealso \code{\link[webtrace]}
+#' @seealso \code{\link{webtrace}}
 #'
 #' @export
 #'
@@ -109,7 +109,7 @@ rectroi = function(k, ppm, scan) {
 #' Split up peaks based on weighted graph of nearby mass observations
 #'
 #' \code{webtrace} Performs refinement of high resolution ROIs correcting errors due to nearby peaks, peaks coelescence, and multiple peaks per scan.
-#' 
+#'
 #' Splits peaks based on mass and scan spacing. A graph is formed by linking masses of nearest m/z values within a scan window.  The mincut of the graph which segregates conflicting ROIs (two mass peaks in a single scan) is determined.  The graph is iteratively cut until no conflicts remain.
 #'
 #' Functional as a slower, robust ROI detection sensitive to shifts in mass. Necessary for high resolution and high-variance mass data.
@@ -120,7 +120,7 @@ rectroi = function(k, ppm, scan) {
 #'
 #' @return Integer vector. Each integer is a group assignment. In the same order as supplied k.
 #'
-#' @seealso \code{\link[rectroi]}
+#' @seealso \code{\link{rectroi}}
 #'
 #' @export
 #'
@@ -229,7 +229,7 @@ webtrace = function(k, scan, neighbors = 3) {
 #' @param neighbors.web integer.
 #' @return Integer vector. Each integer is a group assignment. In the same order as supplied k.
 #'
-#' @seealso \code{\link[rectroi]} \code{\link[webtrace]}
+#' @seealso \code{\link{rectroi}} \code{\link{webtrace}}
 #'
 #' @export
 #'

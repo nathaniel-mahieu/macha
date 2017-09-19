@@ -9,14 +9,14 @@
 #' @param seed.maxdist Integer. The maximum distance in scans the local maximum of the smoothed trace can travel and still positively reinforce a peak.
 #' @param seed.minwidth Numeric. Minimum width in scans of a putative region to be returned as a seed.
 #' @param seed.maxdensity Float. Maximum density in which to seed peaks in peaks/scan. Eg 1/5.
-#' @param seed.sn.perpeak Numeric vector. Indices of the vector correspond to the number of observations which must be made of the mass in the peak region defined by seed.sn.range. The value at each index defines the minimum intensity necessary for an observation to count in value * baseline. Eg. c(Inf, 10) means a seed with only 1 observation will not be returned whereas a seed with 2 observations at 10*baseline will pass. 
+#' @param seed.sn.perpeak Numeric vector. Indices of the vector correspond to the number of observations which must be made of the mass in the peak region defined by seed.sn.range. The value at each index defines the minimum intensity necessary for an observation to count in value * baseline. Eg. c(Inf, 10) means a seed with only 1 observation will not be returned whereas a seed with 2 observations at 10*baseline will pass.
 #' @param seed.sn.range Integer. Range in scans around a peak loci in which to look for observations qualifying as in seed.sn.perpeak.
 #' @param do.plot Boolean. Plot a bunch of random things.
 #'
 #'
 #' @return Matrix. Columns "start", "end", "peak", correspond to the indices of the peak and its flanking valleys.
 #'
-#' @seealso \code{\link[sspp]}
+#' @seealso \code{\link{sspp}}
 #'
 #' @export
 #'

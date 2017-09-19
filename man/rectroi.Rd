@@ -9,7 +9,7 @@ rectroi(k, ppm, scan)
 \arguments{
 \item{k}{data.table. Three columns: mz, s, k and (optional) g. s is scan, k is a unique integer ID for each peak, g is the initial group assignment.}
 
-\item{ppm}{numeric. Mass distance in ppm to consider groups of peaks distinct. (If using a ROI refinement like \code{\link[webtrace]} a generous value is acceptable.) Suggested: 2*"instrument ppm"}
+\item{ppm}{numeric. Mass distance in ppm to consider groups of peaks distinct. (If using a ROI refinement like \code{\link{webtrace}} a generous value is acceptable.) Suggested: 2*"instrument ppm"}
 
 \item{scan}{integer. Scan distance to consider groups of peaks distinct. Consider the number of unobserved values to infer were missing. Suggested: 6.}
 }
@@ -23,5 +23,5 @@ data.table. Column r denoting the roi assignment for mass peak k.
 Functional as a fast, first pass ROI grouping.
 }
 \seealso{
-\code{\link[webtrace]}
+\code{\link{webtrace}}
 }

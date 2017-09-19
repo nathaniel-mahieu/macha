@@ -15,7 +15,7 @@ List (a Macha object) containing additional list named k_r containing the assign
 \details{
 In addition this function assures that only one point per scan is in a ROI.
 
-See: \code{\link[centroidgroups]} for parameter descriptions.
+See: \code{\link{centroidgroups}} for parameter descriptions.
 }
 \examples{
 \dontrun{

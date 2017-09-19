@@ -1,18 +1,18 @@
 #' ROI detection based on density estimation.
 #'
 #' \code{findrois} takes mass spectra and assigns peaks to ROIs
-#' 
+#'
 #' In addition this function assures that only one point per scan is in a ROI.
 #'
-#' See: \code{\link[centroidgroups]} for parameter descriptions.  
+#' See: \code{\link{centroidgroups}} for parameter descriptions.
 #'
 #' @return List (a Macha object) containing additional list named k_r containing the assignment of each mass peak (k) to an ROI (r).
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' findrois(macha, minlength = 15, ppm = 2, rtwid = 7)
 #' }
-#' 
+#'
 #' @export
 
 findrois = function(features, minlength = 5, ppm = 1, rtwid = 10) {
