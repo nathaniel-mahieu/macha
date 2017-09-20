@@ -17,19 +17,21 @@ collect_errors = function(l, names = NULL, .rbind = T) {
 
 }
 
+x = 1:10
+file="foo.txt"
 
 sink_output = function(x, file) {
-  f = file(file)
+  f = file(file, open="a")
 
-  write(paste("File:", file), file=f,append=TRUE)
-  write(paste("Time Ended:", Sys.time()), file=f,append=TRUE)
-  write(paste("Output:\n\n```"), file=f,append=TRUE)
+  write(paste("File:", file), file=f)
+  write(paste("Time Ended:", Sys.time()), file=f)
+  write(paste("Output:\n```"), file=f)
 
-  sink(f, append=T)
+  sink(f)
   print(x)
   sink()
 
-  write(paste("```"), file=f,append=TRUE)
+  write(paste("```\n\n\n"), file=f)
   close(f)
 
   invisible()
