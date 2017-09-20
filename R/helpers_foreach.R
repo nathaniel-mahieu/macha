@@ -21,15 +21,15 @@ collect_errors = function(l, names = NULL, .rbind = T) {
 sink_output = function(x, file) {
   f = file(file)
 
-  write(paste("File:", file),file=file,append=TRUE)
-  write(paste("Time Ended:", Sys.time()),file=file,append=TRUE)
-  write(paste("Output:\n\n```"),file=file,append=TRUE)
+  write(paste("File:", file), file=f,append=TRUE)
+  write(paste("Time Ended:", Sys.time()), file=f,append=TRUE)
+  write(paste("Output:\n\n```"), file=f,append=TRUE)
 
   sink(f, append=T)
   print(x)
   sink()
 
-  write(paste("```"),file=file,append=TRUE)
+  write(paste("```"), file=f,append=TRUE)
   close(f)
 
   invisible()
