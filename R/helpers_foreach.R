@@ -17,3 +17,20 @@ collect_errors = function(l, names = NULL, .rbind = T) {
 
 }
 
+
+sink_output = function(x, file) {
+  f = file(file)
+
+  write(paste("File:", file),file=file,append=TRUE)
+  write(paste("Time Ended:", Sys.time()),file=file,append=TRUE)
+  write(paste("Output:\n\n```"),file=file,append=TRUE)
+
+  sink(file, append=T)
+  x
+  sink()
+
+  write(paste("```"),file=file,append=TRUE)
+  close(f)
+
+  invisible()
+  }
