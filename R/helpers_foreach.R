@@ -25,8 +25,8 @@ sink_output = function(x, file) {
   write(paste("Time Ended:", Sys.time()),file=file,append=TRUE)
   write(paste("Output:\n\n```"),file=file,append=TRUE)
 
-  sink(file, append=T)
-  x
+  sink(f, append=T)
+  print(x)
   sink()
 
   write(paste("```"),file=file,append=TRUE)
