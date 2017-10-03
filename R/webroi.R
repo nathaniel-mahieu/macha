@@ -105,7 +105,6 @@ rectroi = function(k, ppm, scan) {
   }
 
 
-
 #' Split up peaks based on weighted graph of nearby mass observations
 #'
 #' \code{webtrace} Performs refinement of high resolution ROIs correcting errors due to nearby peaks, peaks coelescence, and multiple peaks per scan.

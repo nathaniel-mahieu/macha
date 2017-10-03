@@ -1,5 +1,9 @@
 plotgrt = function(Nmacha) {
 
+  dt = Nmacha$m.c[Nmacha$m.c_g,,on="m.c."]
+  
+  dt$g %>% table %>% hist(breaks = 100)
+  
   df = Nmacha$grt %>% do.call(what=rbind)
   df[,m:=factor(rep(seq_along(Nmacha$grt), sapply(Nmacha$grt, nrow)))]
 
