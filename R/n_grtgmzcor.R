@@ -1,15 +1,15 @@
 #' Use well behaved peak groups to correct drift in both retention time and mass across samples
 #'
 #' \code{grtmzcor} Determines global correction curves (one correction per scan) for both mz and rt and builds a mapping between the global retention time (rt.g) and observed retention time (rt)
-#' 
+#'
 #' A loess curve is fit to the difference between the observed value and the mean of all values against the retention time.
-#' 
+#'
 #' @param Nmacha An Nmacha object containing peaks grouped between samples.
 #' @param shaperng Peaks within a group must exhibit a range of shape parameters less than this value to be included in the fit.
 #' @param	fracobs Peak groups must contain at least this fraction of peaks to be included in the fit.
-#' 
-#' @return List (an Nmacha object) containing additional list named grt (mapping between grt and rt for each file), gmz (mapping between gmz and mz for each file), gc. 
-#' 
+#'
+#' @return List (an Nmacha object) containing additional list named grt (mapping between grt and rt for each file), gmz (mapping between gmz and mz for each file), gc.
+#'
 #' @examples
 #' \dontrun{
 #' grtgmzcor(Nmacha, shaperng = 2, fracobs = .4)
@@ -23,7 +23,7 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
   needed.obs = length(Nmacha$m) * fracobs
   good.groups = Nmacha$m.c[Nmacha$m.c_g,,on="m.c."][,length(unique(m)) == length(m) & length(m) >= needed.obs & diff(range(shape)) < shaperng, by = g]
 
-  
+
   ftg = Nmacha$m.c[Nmacha$m.c_g,,on="m.c."][good.groups[V1==T],,on="g"]
 
 
@@ -64,7 +64,7 @@ grtgmzcor = function(Nmacha, shaperng = 2, fracobs=0.6) {
 
 
 cor.global = function(rts, grt, uncorrect = F) {
-  if (!uncorrect) predict(grt, rts)$y
+  if (uncorrect) predict(grt, rts)$y
   else approx(grt$data$y, grt$data$x, xout = rts)$y
 }
 

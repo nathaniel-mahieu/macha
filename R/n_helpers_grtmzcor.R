@@ -1,51 +1,3 @@
-plotgrt = function(Nmacha) {
-
-  dt = Nmacha$m.c[Nmacha$m.c_g,,on="m.c."]
-  
-  dt$g %>% table %>% hist(breaks = 100)
-  
-  df = Nmacha$grt %>% do.call(what=rbind)
-  df[,m:=factor(rep(seq_along(Nmacha$grt), sapply(Nmacha$grt, nrow)))]
-
-  df = df %>% as.data.frame
-  df = subset(df, !(rt == 0 | rt == max(rt)))
-
-  curves = ggplot(df) + geom_line(aes(x = rt, y = rt - grt, group = m, colour = m)) + theme_nate() + guides(col = guide_legend(nrow = 1))
-
-
-
-  Gcs = Nmacha$m.c[Nmacha$gcs[,.(c,m)],,on=.(c,m)]
-  tgs = sapply(split(Gcs$g, cut(Gcs$rtpeak, 4)), sample, size=1)
-
-  preps = lapply(tgs, function(.g) {
-
-    Group = getgroup(Nmacha, .g)
-    Group$rs[,rt.g := corrt(rt, Nmacha$grt[[m[1]]]),by="m"]
-
-    xlim = range(Group$cs[,.(rtmin, rtmax)])
-
-    df.rois = Group$rs %>% as.data.frame
-
-    df.rois$m = factor(df.rois$m)
-
-    list(
-      ggplot() +
-        geom_line(data = df.rois, aes(x=rt, y = i, group = m, colour = (m))) +
-        theme_nate()  + theme(legend.position = "none") + scale_y_continuous(labels=fancy_scientific) + xlim(xlim),
-      ggplot() +
-        geom_line(data = df.rois, aes(x=rt.g, y = i, group = m, colour = (m))) +
-        theme_nate()  + theme(legend.position = "none") + scale_y_continuous(labels=fancy_scientific) + xlim(xlim)
-    )
-
-    })
-
-
-  g = do.call(arrangeGrob, c(sapply(preps, '[', 1), list(nrow = 1)))
-  g2 = do.call(arrangeGrob, c(sapply(preps, '[', 2), list(nrow = 1)))
-  grid.arrange(curves, g, g2, nrow = 3, top="RT correction curves and randomly selected peak groups.", layout_matrix = cbind(c(1,1,2,3)))
-  
-}
-
 plotgmz = function(Nmacha) {
 
   df = Nmacha$gmz %>% do.call(what=rbind)
@@ -88,4 +40,22 @@ plotgmz = function(Nmacha) {
   g2 = do.call(arrangeGrob, c(sapply(preps, '[', 2), list(nrow = 1)))
   grid.arrange(curves, g, g2, nrow = 3, top="Mz correction curves and randomly selected peak groups.", layout_matrix = cbind(c(1,1,2,3)))
 
+}
+
+
+explore_grouping = function(Nmacha, scans = seq(1, 20, 4), ppms = seq(1, 10, 2)) { # Unfinished function to help choose grouping parameters.
+
+  grid = expand.grid(scans, ppms)
+  dt = Nmacha$m.c[,.(k = m.c., mz = mz, s = location)]
+
+  dt.g = apply(grid, 1, function(x) {
+    cbind(g = rectroi(dt, scan = x[1], ppm = x[2])[,.(m.c. = k, g = r)]$g %>% table, ppm = x[1], scan = x[2])
+  }) %>% do.call(what=rbind) %>% data.table
+
+  dt.g.h = dt.g[,.N, by="g,ppm,scan"]
+  grid.arrange(
+    ggplot(dt.g) + geom_histogram(aes(x = g), stat="count") + facet_grid(ppm ~ scan) + xlim(0, length(Nmacha$m)*2),
+    ggplot(dt.g) + geom_histogram(aes(x = g), stat="count") + facet_grid(ppm ~ scan) + scale_y_log10(),
+    ncol = 2
+  )
 }
