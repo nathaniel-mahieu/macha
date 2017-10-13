@@ -202,7 +202,7 @@ webtrace = function(k, scan, neighbors = 3) {
       x$cut %>% sapply(as.numeric)
     }) %>% unlist %>% table
 
-    delnum = max(5, floor(length(mincutt)/5), sum(mincutt > .5*nrow(storesolv)))
+    delnum = max(4, floor(length(mincutt)/10), sum(mincutt > .1*nrow(storesolv)))
 
     g = igraph::delete.edges(g, head(as.numeric(names(mincutt[order(mincutt, decreasing = T)])), n = delnum))
     }
