@@ -139,8 +139,6 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, Inf)) {
   # Choose Peaks
 
-  profvis::profvis({
-
     ug. = Nmacha$putative_peaks$g %>% unique
     ug. = sample(ug., 20);
     lug. = length(ug.)
@@ -236,7 +234,6 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
 
       components
     }
-  })
   Nmacha$cc = output$list
   Nmacha$cc_error = output$errors
 
