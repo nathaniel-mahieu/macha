@@ -23,10 +23,10 @@ Depends:
   ggrepel,
   hrbrthemes,
   extrafont,
-  dbscan
+  dbscan,
+  warpgroup
 Suggests:
-	xcms,
-	warpgroup
+	xcms
 Imports:
   TTR,
   signal,
