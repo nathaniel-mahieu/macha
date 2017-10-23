@@ -140,7 +140,7 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
   # Choose Peaks
 
     ug. = Nmacha$putative_peaks$g %>% unique
-    ug. = sample(ug., 20);
+    #ug. = sample(ug., 20);
     lug. = length(ug.)
     #ug. = 1665
     output = foreach (
@@ -228,8 +228,14 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
       cgs[is.na(i), i:= as.integer(min(cgs$i,na.rm=T)/2)]
 
       components = lapply(split(cgs, by ="m"), function(x) {
-        fitseeds(x[,.(rt=rt, i = i, ii = i, b = b, bb = b)] %>% as.matrix, seeds = seeds, unrelated.dist = 30, const.lower = consts[[1]], const.upper = consts[[2]], do.plot = F) %>%
-          rbind(., m = rep(x$m[[1]], ncol(.)), ccclust = g., cc = okm)
+        comps = fitseeds(x[,.(rt=rt, i = i, ii = i, b = b, bb = b)] %>% as.matrix, seeds = seeds, unrelated.dist = 30, const.lower = consts[[1]], const.upper = consts[[2]], do.plot = F)
+
+        mzs = sapply(seq_len(ncol(comps)), function(c) {
+          sum(curvemany(c(comps[1:3,c],1,0), x$rt) %>% { ./sum(.,na.rm=T) } * x$mz, na.rm=T)
+          })
+
+        comps %>%  rbind(., m = rep(x$m[[1]], ncol(.)), mz = mzs, ccclust = g., cc = okm)
+
       }) %>% do.call(what = cbind) %>% aperm %>% data.table
 
       components
