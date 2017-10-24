@@ -12,15 +12,35 @@ warpcombine = function(Nmacha, rt.padding = 10) {
   #m.c_g.bak = Nmacha$m.c_g
   #Nmacha$m.c_g = Nmacha$m.c_g[g %in% sample(unique(g), 100)]
 
+  ms = seq_along(Nmacha$m)
+
+  mchan_m_g = m.c_mchan[Nmacha$m.c_g,,on="m.c."] %>% { .[!duplicated(.)] }
+  cs.l = split(mchan_m_g, by="g")
+
+  trace_cache.dt = do.call(what=rbind, trace_cache)
+  trace_cache.l = split(trace_cache.dt[mchan_m_g[,.(mchan, m, g)],,on=c("mchan","m")],by="g")
+  trace_cache.l.o = match(names(cs.l), names(trace_cache.l))
+
+  trace_ranges = trace_cache.dt[, c(range(rt,na.rm=T), range(mz,na.rm=T)) %>% { .(rtmin = .[1], rtmax = .[2], mzmin = .[3], mzmax = .[4]) },by=c("m", "mchan")]
+  g_ranges = mchan_m_g[,c(range(c(rtmin, rtmax), na.rm=T), range(c(mz),na.rm=T)) %>% { .(rtmin = .[1], rtmax = .[2], mzmin = .[3], mzmax = .[4]) },by=c("g", "m")]
+
+  group_traces = g_ranges[trace_ranges,
+     .(m, g, mchan),
+     on = .(m==m, rtmin <= rtmax, rtmax >= rtmin, mzmin <= mzmax, mzmax >= mzmin),
+     nomatch = F, allow.cartesian=T
+     ]
+
+  raw_traces.l = split(trace_cache.dt[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
+  raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
+
+
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   output = foreach (
-    g. = ug., i = icount(),
-    .packages = "macha", .options.redis=list(chunkSize=50),
-    .errorhandling = 'pass', .final = function(x) collect_errors(x, names = ug., .rbind=F)
+    cs = cs.l, trace_cache = trace_cache.l[trace_cache.l.o], raw_traces = raw_traces.l[raw_traces.l.o], i = icount(),
+    .packages = c("macha", "dtw"), .options.redis=list(chunkSize=50),
+    .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(cs.l), .rbind=F)
   ) %dopar% {
     cat("\rWarpcombine: ", round(i/lug.,2), "       ")
-
-    cs = m.c_mchan[Nmacha$m.c_g[g==g.],,on="m.c."]
 
     trange = cs[,.(rtmin,rtmax)] %>% range
     trange.lim = c( trange[1]-rt.padding, trange[2]+rt.padding)
@@ -33,7 +53,7 @@ warpcombine = function(Nmacha, rt.padding = 10) {
     rois = by(cs, cs$m, function(rows) {
       rows = unique(rows[,.(m,mchan)])
 
-      r = trace_cache[[rows$m[1]]][rows[,.(mchan)], on="mchan"]
+      r = trace_cache[rows,,on=.(mchan, m)]
       r = r[rt > trange.lim[1] & rt < trange.lim[2]]
 
       # Merge multiple ROIs
@@ -50,14 +70,12 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 
 
     # Find ROIs in files where no peak was detected.
-    missing.m = which(!(seq_along(Nmacha$m) %in% cs$m)) %>% unique
+    missing.m = which(!(ms %in% cs$m)) %>% unique
 
 
     rois = lapply (missing.m, function(m.) { #cat(m., " ")
-      rs = Nmacha$m[[m.]]$r[,.(r = r, r1i = findInterval(minrt, trange), r2i = findInterval(maxrt, trange), m1i = findInterval(maxmz, mrange), m2i =  findInterval(minmz, mrange))][(r1i != r2i | r1i == 1 & r2i == 1) & (m1i != m2i | m1i == 1 & m2i == 1)]
-      mchans = Nmacha$m[[m.]]$r_mchan[r %in% rs$r]
+      newroi = raw_traces[m == m.]
 
-      newroi = trace_cache[[m.]][mchan %in% mchans$mchan][rt > trange.lim[1] & rt < trange.lim[2]]
       if (any(duplicated(newroi$s))) { stop("Ambiguous ROI choice.") }
 
       newroi
@@ -70,11 +88,11 @@ warpcombine = function(Nmacha, rt.padding = 10) {
     #if (any(!look.for.missing)) warning("Missing some portion of the expected regions")
 
     # Ask: We have ROIs but do we have ROIs for all files?
-    if (unique(rois$m) %>% length < length(Nmacha$m)) { warning(paste(sep=": ", "Missing ROI for some files", g., m.)) }
+    if (unique(rois$m) %>% length < length(ms)) { warning(paste(sep=": ", "Missing ROI for some files", g., m.)) }
 
     # Ask: We have ROIs but did those ROIs miss any peaks?
 
-    wfi = which(findInterval(rtouts.g, range(cs[,.(rtmin, rtmax)]))==1) %>% { c(.[1]-1, ., .[length(.)] + 1) }
+    wfi = which(findInterval(rtouts.g, range(cs[,.(rtmin-5, rtmax+5)]))==1) %>% { c(.[1]-1, ., .[length(.)] + 1) }
     rtouts = rtouts.g[wfi]
 
     # Align EICs

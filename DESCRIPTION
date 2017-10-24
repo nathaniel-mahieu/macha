@@ -24,7 +24,7 @@ Depends:
   hrbrthemes,
   extrafont,
   dbscan,
-  warpgroup
+  dtw
 Suggests:
 	xcms
 Imports:
