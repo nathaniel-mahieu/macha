@@ -1,6 +1,5 @@
 warpcombine = function(Nmacha, rt.padding = 10) {
-  cat("Building trace cache.\n")
-  trace_cache = make_trace_cache(Nmacha)
+  if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
 
   m.c_mchan = Nmacha$m.c[,.SD[Nmacha$m[[m[1]]]$r_mchan,,on="r",nomatch=0],by="m"]
   #Nmacha$m.c_g[,.N,by="g"][N==6]
@@ -17,11 +16,10 @@ warpcombine = function(Nmacha, rt.padding = 10) {
   mchan_m_g = m.c_mchan[Nmacha$m.c_g,,on="m.c."] %>% { .[!duplicated(.)] }
   cs.l = split(mchan_m_g, by="g")
 
-  trace_cache.dt = do.call(what=rbind, trace_cache)
-  trace_cache.l = split(trace_cache.dt[mchan_m_g[,.(mchan, m, g)],,on=c("mchan","m")],by="g")
+  trace_cache.l = split(Nmacha$trace_cache[mchan_m_g[,.(mchan, m, g)],,on=c("mchan","m")],by="g")
   trace_cache.l.o = match(names(cs.l), names(trace_cache.l))
 
-  trace_ranges = trace_cache.dt[, c(range(rt,na.rm=T), range(mz,na.rm=T)) %>% { .(rtmin = .[1], rtmax = .[2], mzmin = .[3], mzmax = .[4]) },by=c("m", "mchan")]
+  trace_ranges = Nmacha$trace_cache[, c(range(rt,na.rm=T), range(mz,na.rm=T)) %>% { .(rtmin = .[1], rtmax = .[2], mzmin = .[3], mzmax = .[4]) },by=c("m", "mchan")]
   g_ranges = mchan_m_g[,c(range(c(rtmin, rtmax), na.rm=T), range(c(mz),na.rm=T)) %>% { .(rtmin = .[1], rtmax = .[2], mzmin = .[3], mzmax = .[4]) },by=c("g", "m")]
 
   group_traces = g_ranges[trace_ranges,
@@ -30,14 +28,14 @@ warpcombine = function(Nmacha, rt.padding = 10) {
      nomatch = F, allow.cartesian=T
      ]
 
-  raw_traces.l = split(trace_cache.dt[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
+  raw_traces.l = split(Nmacha$trace_cache[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
   raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
 
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   output = foreach (
     cs = cs.l, trace_cache = trace_cache.l[trace_cache.l.o], raw_traces = raw_traces.l[raw_traces.l.o], i = icount(),
-    .packages = c("macha", "dtw"), .options.redis=list(chunkSize=50),
+    .packages = c("macha", "dtw"), .options.redis=list(chunkSize=50), .noexport = c("Nmacha", "m.c_mchan"),
     .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(cs.l), .rbind=F)
   ) %dopar% {
     cat("\rWarpcombine: ", round(i/lug.,2), "       ")
