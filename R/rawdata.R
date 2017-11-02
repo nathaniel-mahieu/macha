@@ -45,11 +45,11 @@ rawdata = function(file, splits = NULL) {
     newis = seq(from = 1, to = length(data$rt), by = nsplits)
 
     data$mz = data$mz[keepvec]
-    data$intensity = data$intensity[keepvec]
+    data$intensity = as.integer(data$intensity[keepvec])
     data$scanindex = as.integer(newindices)
     data$rt = data$rt[newis]
     data$acquisitionNum = seq_along(data$acquisitionNum[newis])
-    data$polarity = data$polarity[newis]
+    data$polarity = as.integer(data$polarity[newis])
     }
 
   data$acquisitionNum = seq_along(data$acquisitionNum)

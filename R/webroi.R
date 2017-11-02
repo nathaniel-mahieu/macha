@@ -67,7 +67,7 @@ rectroi = function(k, ppm, scan) {
   if ("g" %in% colnames(k)) {
     message("Starting from supplied groups in k$g")
   } else {
-    k[,g:=1]
+    k[,g:=1L]
   }
 
   keeprunning = T
@@ -85,7 +85,7 @@ rectroi = function(k, ppm, scan) {
     #inds = as.integer(cut(seq_along(x), breaks = ass))
     inds = rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))
     #k[,g:= as.numeric(factor(paste(g, inds)))]
-    k[,g:= as.numeric(intfactor(g, inds))]
+    k[,g:= intfactor(g, inds)]
 
 
     setkey(k, g, s)
@@ -95,7 +95,7 @@ rectroi = function(k, ppm, scan) {
     #inds = as.integer(cut(seq_along(x), breaks = ass))
     inds = rep(seq_len(length(ass)+1),c(ass, length(x)) - c(0,ass))
     #k[,g:= as.numeric(factor(paste(g, inds)))]
-    k[,g:= as.numeric(intfactor(g, inds))]
+    k[,g:= intfactor(g, inds)]
 
     currgn = max(k$g)
     cat("\rGroup Number:", currgn, "       ")
