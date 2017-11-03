@@ -226,6 +226,8 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
       #components = fitseeds(eic, seeds = seeds, unrelated.dist = 30, const.upper = const.upper, const.lower = const.lower, do.plot = do.plot)
 
       keep.center = table(km$cluster) %>% { .[order(as.numeric(names(.)))] }  %>% { . >= min_peaks }
+      pps = pps[k %in% which(keep.center)]
+
       seeds = km$centers[keep.center,"location"]
 
 
