@@ -156,9 +156,8 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 }
 
 # Parallelize!
-warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, Inf)) {
+warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, Inf), peak_group_bw = 1) {
   # Choose Peaks
-
     ug. = Nmacha$putative_peaks$g %>% unique
 
     putative_peaks.l = split(Nmacha$putative_peaks, by="g")
@@ -169,7 +168,7 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
 
     output = foreach (
       g. = as.numeric(names(putative_peaks.l)), pps = putative_peaks.l, cgs = composite_groups.l[composite_groups.l.o], i = icount(),
-      .packages = "macha", .options.redis=list(chunkSize=50), .noexport = c("Nmacha", "putative_peaks.l", "composite_groups.l"),
+      .packages = "macha", .options.redis=list(chunkSize=10), .noexport = c("Nmacha", "putative_peaks.l", "composite_groups.l"),
       .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(putative_peaks.l))
     ) %dopar% {
       cat("\rWarpcombine peaks: ", round(i/l.groups,2), "      ")
@@ -193,9 +192,13 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
       #plot(d_clust)
 
 
-      d = density(pps$location, bw = 0.3)
+      d = density(pps$location, bw = peak_group_bw)
       lms = d$y %>% { .[.<0.001] = 0; . } %>% localMaxima
       k = length(lms)
+
+      #multid = sapply(seq(0.1, 3, 0.2), function(bw) {
+      #  density(pps$location, bw = bw)$y %>% { .[.<0.001] = 0; . } %>% localMaxima %>% length
+      #  })
 
       if (k == nrow(pps)) {
         km = list(cluster = seq_len(nrow(pps)), centers = cbind(location=pps$location))
