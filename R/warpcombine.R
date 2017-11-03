@@ -156,7 +156,7 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 }
 
 # Parallelize!
-warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, Inf), peak_group_bw = 1) {
+warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, Inf), peak_group_bw = 1, min_peaks = 2) {
   # Choose Peaks
     ug. = Nmacha$putative_peaks$g %>% unique
 
@@ -208,6 +208,8 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
       }
       pps[,k:=km$cluster]
 
+
+
       if (F) {
         plot(d)
         grid.arrange(
@@ -222,7 +224,11 @@ warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, In
 
       # Refit Peaks
       #components = fitseeds(eic, seeds = seeds, unrelated.dist = 30, const.upper = const.upper, const.lower = const.lower, do.plot = do.plot)
-      seeds = km$centers[,"location"]
+
+      keep.center = table(km$cluster) %>% { .[order(as.numeric(names(.)))] }  %>% { . >= min_peaks }
+      seeds = km$centers[keep.center,"location"]
+
+
       okm = order(seeds)
       rt.ts = cgs$rt %>% unique %>% {.[order(.)]}
 
