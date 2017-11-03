@@ -155,25 +155,24 @@ warpcombine = function(Nmacha, rt.padding = 10) {
   return(Nmacha)
 }
 
-
+# Parallelize!
 warpcombine_peaks = function(Nmacha, refit_constraints_range = c(1, 0.5, 0.1, Inf)) {
   # Choose Peaks
 
     ug. = Nmacha$putative_peaks$g %>% unique
-    #ug. = sample(ug., 20);
-    lug. = length(ug.)
-    #ug. = 1665
-    output = foreach (
-      g. = ug., i = icount(),
-      .packages = "macha", .options.redis=list(chunkSize=50),
-      .errorhandling = 'pass', .final = function(x) collect_errors(x, names = ug.)
-    ) %dopar% {
-      cat("\rWarpcombine peaks: ", round(i/lug.,2), "      ")
 
-      #g. =  Nmacha$putative_peaks[,.N,by="g"][N>5]$g %>% sample(1)
-      #g. = sample(Nmacha$putative_peaks$g, 1)
-      pps = Nmacha$putative_peaks[g==g.]
-      cgs = Nmacha$composite_groups[g==g.]
+    putative_peaks.l = split(Nmacha$putative_peaks, by="g")
+    composite_groups.l = split(Nmacha$composite_groups, by="g")
+    composite_groups.l.o = match(names(putative_peaks.l), names(composite_groups.l))
+
+    l.groups = length(putative_peaks.l)
+
+    output = foreach (
+      g. = as.numeric(names(putative_peaks.l)), pps = putative_peaks.l, cgs = composite_groups.l[composite_groups.l.o], i = icount(),
+      .packages = "macha", .options.redis=list(chunkSize=50), .noexport = c("Nmacha", "putative_peaks.l", "composite_groups.l"),
+      .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(putative_peaks.l))
+    ) %dopar% {
+      cat("\rWarpcombine peaks: ", round(i/l.groups,2), "      ")
 
       setkey(cgs, rt)
       cgs.l = split(cgs, by="m")
