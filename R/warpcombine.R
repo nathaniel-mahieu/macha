@@ -1,4 +1,4 @@
-warpcombine = function(Nmacha, rt.padding = 10) {
+warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2) {
   if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
 
   cat("Starting. ", 0);   lt = Sys.time()
@@ -118,11 +118,11 @@ warpcombine = function(Nmacha, rt.padding = 10) {
     })
 
 
-    for (i in seq_len(dim(eic.m)[3])[-2]) { #cat(m.)
+    for (i in seq_len(dim(eic.m)[3])[-m.align_to]) { #cat(m.)
       m. = names(eic.l)[i] %>% as.numeric
       dt = dtw(
-        c(rep(0, 20), eic.m[,"intensity",i], rep(0,20)),
-        c(rep(0, 20), eic.m[,"intensity",2], rep(0, 20)),
+        eic.m[,"intensity",i] %>% { c(seq(.[1]/10, .[1], length.out=20), ., seq(.[length(.)], .[length(.)]/10, length.out=20)) },
+        eic.m[,"intensity",m.align_to] %>% { c(seq(.[1]/10, .[1], length.out=20), ., seq(.[length(.)], .[length(.)]/10, length.out=20)) },
         open.end = F, open.begin = F, window.type = "none", keep=F, step.pattern = asymmetricP2)
 
       #plot(dt$index1, dt$index2)
@@ -167,7 +167,7 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 }
 
 # Parallelize!
-warpcombine_peaks = function(Nmacha, parscale = c(0.1, 0.01, 0.01, 10, 100), refit_constraints_range = c(1, 0.5, 0.1, Inf), peak_group_bw = 1, min_peaks = 2) {
+warpcombine_peaks = function(Nmacha, parscale = c(0.1, 0.1, 0.1, 1E5, 1E5), ndeps = c(0.01, 0.01, 0.01, 0.01, 0.01), refit_constraints_range = c(1, 0.5, 0.1, Inf), peak_group_bw = 1, min_peaks = 2) {
   # Choose Peaks
     ug. = Nmacha$putative_peaks$g %>% unique
 

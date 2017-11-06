@@ -114,9 +114,7 @@ fitandreseed = function(roi, seeds, unrelated.dist=30, min.peakwidth = 3, sn.adj
 }
 
 
-fitseeds = function(eic, seeds, unrelated.dist = 0, parscale = c(0.1, 0.01, 0.01, 10, 100), const.lower=NULL, const.upper=NULL, usebaseline = T, do.plot=F) {
-
-
+fitseeds = function(eic, seeds, unrelated.dist = 0, parscale = c(0.1, 0.1, 0.1, 1E5, 1E5), ndeps = c(0.01, 0.01, 0.01, 0.01, 0.01), const.lower=NULL, const.upper=NULL, usebaseline = T, do.plot=F) {
 
   #if (is.null(const.lower) | is.null(const.upper)) { stop("Only one set of bounds supplied") }
 
@@ -141,17 +139,17 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, parscale = c(0.1, 0.01, 0.01
       const.upperx = c(const.upper[i,], 20)
 
       parhat = tryCatch(
-        optim(par, fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lowerx, upper = const.upperx, control = list(parscale = parscale*10))$par,
+        optim(par, fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lowerx, upper = const.upperx, control = list(parscale = parscale*10, ndeps = ndeps))$par,
         error = function(e) {
           warning("Fitting BFGS failed in stage 1. Fell back to slow method. Unbounded!!");
-          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale*10))$par
+          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale*10, ndeps = ndeps))$par
         })
     } else {
       parhat =  tryCatch(
-        optim(par, fitmany, x=x, y=y, method = "BFGS", control = list(parscale = parscale*10))$par,
+        optim(par, fitmany, x=x, y=y, method = "BFGS", control = list(parscale = parscale*10, ndeps = ndeps))$par,
         error = function(e) {
           warning("Fitting BFGS failed in stage 1. Fell back to slow method.");
-          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale*10))$par
+          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale*10, ndeps = ndeps))$par
         })
     }
 
@@ -198,27 +196,27 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, parscale = c(0.1, 0.01, 0.01
     const.upper = c(const.upper %>% aperm, 0.0001)
 
     opt = tryCatch(
-      optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lower, upper = const.upper, control = list(parscale = c(rep(parscale[1:4], ncol(parhat.mat)), parscale[5]))),
+      optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lower, upper = const.upper, control = list(parscale = c(rep(parscale[1:4], ncol(parhat.mat)), parscale[5]), ndeps = c(rep(ndeps[1:4], ncol(parhat.mat)), ndeps[5]))),
       error = function(e) {
         warning("Fitting BFGS failed in stage 2. Fell back to slow method. Unbounded!!");
-        optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale))
+        optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale, ndeps = ndeps))
       })
   } else if (usebaseline) {
     b = mean(eic[inds,"bb"],na.rm=T) * scale.factor
 
     opt = tryCatch(
-      optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "BFGS", control = list(parscale = c(rep(parscale[1:4], ncol(parhat.mat))))),
+      optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "BFGS", control = list(parscale = c(rep(parscale[1:4], ncol(parhat.mat))), ndeps = c(rep(ndeps[1:4], ncol(parhat.mat))))),
       error = function(e) {
         warning("Fitting BFGS failed in stage 2. Fell back to slow method.");
-        optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale))
+        optim(c(parhat.mat[1:4,]), fitmanyb, b=b, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale[1:4], ndeps = ndeps[1:4]))
       })
     opt$par = c(opt$par, b)
   } else {
     opt = tryCatch(
-      optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "BFGS", control = list(parscale = c(rep(parscale[1:4], ncol(parhat.mat))))),
+      optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "BFGS", control = list(parscale = c(rep(parscale[1:4], ncol(parhat.mat)), parscale[5]), ndeps = c(rep(ndeps[1:4], ncol(parhat.mat)), ndeps[5]))),
       error = function(e) {
         warning("Fitting BFGS failed in stage 2. Fell back to slow method.");
-        optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale))
+        optim(c(parhat.mat[1:4,], 0), fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale, ndeps = ndeps))
       })
   }
 
