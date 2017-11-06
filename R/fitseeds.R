@@ -141,17 +141,17 @@ fitseeds = function(eic, seeds, unrelated.dist = 0, parscale = c(0.1, 0.01, 0.01
       const.upperx = c(const.upper[i,], 20)
 
       parhat = tryCatch(
-        optim(par, fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lowerx, upper = const.upperx, control = list(parscale = parscale))$par,
+        optim(par, fitmany, x=x, y=y, method = "L-BFGS-B", lower = const.lowerx, upper = const.upperx, control = list(parscale = parscale*10))$par,
         error = function(e) {
           warning("Fitting BFGS failed in stage 1. Fell back to slow method. Unbounded!!");
-          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale))$par
+          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale*10))$par
         })
     } else {
       parhat =  tryCatch(
-        optim(par, fitmany, x=x, y=y, method = "BFGS", control = list(parscale = parscale))$par,
+        optim(par, fitmany, x=x, y=y, method = "BFGS", control = list(parscale = parscale*10))$par,
         error = function(e) {
           warning("Fitting BFGS failed in stage 1. Fell back to slow method.");
-          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale))$par
+          optim(par, fitmany, x=x, y=y, method = "Nelder-Mead", control = list(parscale = parscale*10))$par
         })
     }
 
