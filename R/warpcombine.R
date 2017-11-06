@@ -41,7 +41,6 @@ warpcombine = function(Nmacha, rt.padding = 10) {
   raw_traces.l = split(Nmacha$trace_cache[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
   raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
 
-
   cat("Starting foreach loop. ", lt - Sys.time());  lt = Sys.time()
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
@@ -161,8 +160,8 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 
   cat("\n\n")
   Nmacha$warpcombine_error = output$error
-  Nmacha$composite_groups = lapply(output$list, '[[', 'composite_groups') %>% data.table::rbindlist
-  Nmacha$putative_peaks = lapply(output$list, '[[', 'putative_peaks') %>% data.table::rbindlist
+  Nmacha$composite_groups = data.table::rbindlist(lapply(output$list, '[[', 'composite_groups'))
+  Nmacha$putative_peaks = data.table::rbindlist(lapply(output$list, '[[', 'putative_peaks'))
 
   return(Nmacha)
 }
