@@ -47,7 +47,7 @@ warpcombine = function(Nmacha, rt.padding = 10) {
   #g. = "231"; lassign(cs = cs.l[[g.]], trace_cache = trace_cache.l[[g.]], raw_traces = raw_traces.l[[g.]])
   output = foreach (
     cs = cs.l, trace_cache = trace_cache.l[trace_cache.l.o], raw_traces = raw_traces.l[raw_traces.l.o], i = icount(),
-    .packages = c("macha", "dtw"), .options.redis=list(chunkSize=50), .noexport = c("Nmacha", "m.c_mchan"),
+    .packages = c("macha", "dtw"), .options.redis=list(chunkSize=10), .noexport = c("Nmacha", "m.c_mchan"),
     .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(cs.l), .rbind=F)
   ) %dopar% {
     cat("\rWarpcombine: ", round(i/lug.,2), "       ")
