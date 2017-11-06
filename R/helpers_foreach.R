@@ -7,7 +7,7 @@ collect_errors = function(l, names = NULL, .rbind = T) {
   })
 
   list = l[!ise]
-  if (.rbind) list = do.call(rbind, list)
+  if (.rbind) list = data.table::rbindlist(list)
 
 
   list(
