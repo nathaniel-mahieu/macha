@@ -1,6 +1,6 @@
 warpcombine = function(Nmacha, rt.padding = 10) {
   if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
-profvis::profvis({
+#profvis::profvis({
   m.c_mchan = Nmacha$m.c[,.SD[Nmacha$m[[m[1]]]$r_mchan,,on="r",nomatch=0],by="m"]
   #Nmacha$m.c_g[,.N,by="g"][N==6]
 
@@ -37,7 +37,7 @@ profvis::profvis({
   raw_traces.l = split(Nmacha$trace_cache[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
   raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
 
-})
+#})
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   #g. = "231"; lassign(cs = cs.l[[g.]], trace_cache = trace_cache.l[[g.]], raw_traces = raw_traces.l[[g.]])
