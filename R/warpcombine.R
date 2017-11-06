@@ -1,6 +1,7 @@
 warpcombine = function(Nmacha, rt.padding = 10) {
   if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
-#profvis::profvis({
+
+  cat("Starting. ", 0);   lt = Sys.time()
   m.c_mchan = Nmacha$m.c[,.SD[Nmacha$m[[m[1]]]$r_mchan,,on="r",nomatch=0],by="m"]
   #Nmacha$m.c_g[,.N,by="g"][N==6]
 
@@ -13,12 +14,14 @@ warpcombine = function(Nmacha, rt.padding = 10) {
 
   ms = seq_along(Nmacha$m)
 
+  cat("Splitting Up Jobs. ", lt - Sys.time());   lt = Sys.time()
   mchan_m_g = m.c_mchan[Nmacha$m.c_g,,on="m.c."]
   cs.l = split(mchan_m_g, by="g")
 
   trace_cache.l = split(Nmacha$trace_cache[mchan_m_g[,.(mchan, m, g)] %>% { .[!duplicated(.)] },,on=c("mchan","m")],by="g")
   trace_cache.l.o = match(names(cs.l), names(trace_cache.l))
 
+  cat("Aggregating trace and group information. ", lt - Sys.time());   lt = Sys.time()
   trace_ranges = Nmacha$trace_cache[, .(rtmin = min(rt, na.rm=T), rtmax = max(rt, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("m", "mchan")]
 
   g_ranges = mchan_m_g[,.(rtmin = min(rtmin, na.rm=T), rtmax = max(rtmax, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("g", "m")]
@@ -26,7 +29,7 @@ warpcombine = function(Nmacha, rt.padding = 10) {
   setkey(g_ranges, m, rtmin, rtmax, mzmin, mzmax)
   setkey(trace_ranges, m, rtmin, rtmax, mzmin, mzmax)
 
-
+  cat("Searching for missing traces. ", lt - Sys.time());  lt = Sys.time()
   group_traces = trace_ranges[g_ranges,
      .(m, g, mchan),
      on = .(rtmin <= rtmax, rtmax >= rtmin, mzmin <= mzmax, mzmax >= mzmin),
@@ -34,10 +37,12 @@ warpcombine = function(Nmacha, rt.padding = 10) {
      ]
   group_traces = group_traces %>% { .[!duplicated(.)] }
 
+  cat("Splitting up original traces. ", lt - Sys.time());  lt = Sys.time()
   raw_traces.l = split(Nmacha$trace_cache[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
   raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
 
-#})
+
+  cat("Starting foreach loop. ", lt - Sys.time());  lt = Sys.time()
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   #g. = "231"; lassign(cs = cs.l[[g.]], trace_cache = trace_cache.l[[g.]], raw_traces = raw_traces.l[[g.]])
