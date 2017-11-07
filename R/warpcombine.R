@@ -1,4 +1,4 @@
-warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2) {
+warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, foreach_register_backend = NULL) {
   if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
 
   cat("Starting. ", round(0,0), "\n");   lt = Sys.time()
@@ -45,12 +45,15 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2) {
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   #g. = "231"; lassign(cs = cs.l[[g.]], trace_cache = trace_cache.l[[g.]], raw_traces = raw_traces.l[[g.]])
+
+  if (!is.null(foreach_register_backend)) foreach_register_backend()
+
   output = foreach (
     cs = cs.l, trace_cache = trace_cache.l[trace_cache.l.o], raw_traces = raw_traces.l[raw_traces.l.o], i = icount(),
     .packages = c("macha", "dtw"), .options.redis=list(chunkSize=10), .noexport = c("Nmacha", "m.c_mchan"),
     .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(cs.l), .rbind=F)
   ) %dopar% {
-    cat("\rWarpcombine: ", round(i/lug.,2), "       ")
+    cat("\rWarpcombine: ", round(i/lug.,2), " - ", i, "          ")
 
     trange = cs[,.(rtmin,rtmax)] %>% range
     trange.lim = c( trange[1]-rt.padding, trange[2]+rt.padding)
