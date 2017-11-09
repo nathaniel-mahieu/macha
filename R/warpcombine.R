@@ -1,9 +1,16 @@
-warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, foreach_register_backend = NULL) {
+
+
+warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detected = 5, min_mchan_length = 2, foreach_register_backend = NULL) {
   if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
 
-  cat("Starting. ", round(0,0), "\n");   lt = Sys.time()
+  print("Starting. "); print("\n"); lt = Sys.time()
   m.c_mchan = Nmacha$m.c[,.SD[Nmacha$m[[m[1]]]$r_mchan,,on="r",nomatch=0],by="m"]
-  #Nmacha$m.c_g[,.N,by="g"][N==6]
+  mchan_m_g = m.c_mchan[Nmacha$m.c_g,,on="m.c."]
+
+  file_detections = mchan_m_g[,.(m,g)] %>% unique %>% { .[,.N,by=g] }
+
+  mchan_m_g = mchan_m_g[file_detections[N > min_files_detected, .(g)],,on=.(g)]
+
 
   comps = putative = list()
   srate = min(sapply(Nmacha$m, function(x) mean(diff(x$s$rt))))*0.8
@@ -14,34 +21,39 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, foreach_register
 
   ms = seq_along(Nmacha$m)
 
-  cat("Splitting Up Jobs. ", round(Sys.time()-lt,0), "\n");   lt = Sys.time()
-  mchan_m_g = m.c_mchan[Nmacha$m.c_g,,on="m.c."]
+  print("Splitting Up Jobs. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
   cs.l = split(mchan_m_g, by="g")
 
-  trace_cache.l = split(Nmacha$trace_cache[mchan_m_g[,.(mchan, m, g)] %>% { .[!duplicated(.)] },,on=c("mchan","m")],by="g")
+  trace_cache = Nmacha$trace_cache[mchan_m_g[,.(mchan, m, g)] %>% { .[!duplicated(.)] },,on=c("mchan","m")]
+  trace_cache.l = split(trace_cache,by="g")
   trace_cache.l.o = match(names(cs.l), names(trace_cache.l))
 
-  cat("Aggregating trace and group information. ", round(Sys.time()-lt,0), "\n");   lt = Sys.time()
+  print("Aggregating trace and group information. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+  #trace_ranges = Nmacha$trace_cache[, .(rtmin = min(rt, na.rm=T), rtmax = max(rt, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("m", "mchan")]
+  #g_ranges = mchan_m_g[,.(rtmin = min(rtmin, na.rm=T), rtmax = max(rtmax, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("g")]
   trace_ranges = Nmacha$trace_cache[, .(rtmin = min(rt, na.rm=T), rtmax = max(rt, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("m", "mchan")]
+  g_ranges = mchan_m_g[,.(rtmin = min(rtmin, na.rm=T), rtmax = max(rtmax, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("g")]
 
-  g_ranges = mchan_m_g[,.(rtmin = min(rtmin, na.rm=T), rtmax = max(rtmax, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("g", "m")]
 
-  setkey(g_ranges, m, rtmin, rtmax, mzmin, mzmax)
-  setkey(trace_ranges, m, rtmin, rtmax, mzmin, mzmax)
+  print("Searching for missing traces. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
 
-  cat("Searching for missing traces. ", round(Sys.time()-lt,0), "\n");  lt = Sys.time()
-  group_traces = trace_ranges[g_ranges,
-     .(m, g, mchan),
-     on = .(rtmin <= rtmax, rtmax >= rtmin, mzmin <= mzmax, mzmax >= mzmin),
-     nomatch = F, allow.cartesian=T, mult="all"
-     ]
+  x = trace_ranges[,.(m = as.integer(m), mchan = as.integer(mchan), rtmin = as.integer(rtmin*10), rtmax = as.integer(rtmax*10), mzmin = as.integer(mzmin*1E5), mzmax = as.integer(mzmax*1E5))]
+  y = g_ranges[,.(g = as.integer(g), rtmin = as.integer(rtmin*10), rtmax = as.integer(rtmax*10), mzmin = as.integer(mzmin*1E5), mzmax = as.integer(mzmax*1E5))]
+
+  if(any(is.na(x$mzmax))) stop('Integer overflow.')
+
+  setkey(x, rtmin, rtmax, mzmin, mzmax)
+  setkey(y, rtmin, rtmax, mzmin, mzmax)
+
+  group_traces = x[y, .(m, g, mchan), on=.(rtmin <= rtmax, rtmax >= rtmin, mzmin <= mzmax, mzmax >= mzmin), nomatch=F, allow.cartesian = T]
   group_traces = group_traces %>% { .[!duplicated(.)] }
 
-  cat("Splitting up original traces. ", round(Sys.time()-lt,0), "\n");  lt = Sys.time()
+  print("Splitting up original traces. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+
   raw_traces.l = split(Nmacha$trace_cache[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
   raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
 
-  cat("Starting foreach loop. ", round(Sys.time()-lt,0), "\n");  lt = Sys.time()
+  print("Starting foreach loop. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   #g. = "231"; lassign(cs = cs.l[[g.]], trace_cache = trace_cache.l[[g.]], raw_traces = raw_traces.l[[g.]])
@@ -175,118 +187,118 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, foreach_register
 # Parallelize!
 warpcombine_peaks = function(Nmacha, parscale = c(0.1, 0.1, 0.1, 1E5, 1E5), ndeps = c(0.01, 0.01, 0.01, 0.01, 0.01), refit_constraints_range = c(1, 0.5, 0.1, Inf), peak_group_bw = 1, min_peaks = 2) {
   # Choose Peaks
-    ug. = Nmacha$putative_peaks$g %>% unique
+  ug. = Nmacha$putative_peaks$g %>% unique
 
-    putative_peaks.l = split(Nmacha$putative_peaks, by="g")
-    composite_groups.l = split(Nmacha$composite_groups, by="g")
-    composite_groups.l.o = match(names(putative_peaks.l), names(composite_groups.l))
+  putative_peaks.l = split(Nmacha$putative_peaks, by="g")
+  composite_groups.l = split(Nmacha$composite_groups, by="g")
+  composite_groups.l.o = match(names(putative_peaks.l), names(composite_groups.l))
 
-    l.groups = length(putative_peaks.l)
+  l.groups = length(putative_peaks.l)
 
-    output = foreach (
-      g. = as.numeric(names(putative_peaks.l)), pps = putative_peaks.l, cgs = composite_groups.l[composite_groups.l.o], i = icount(),
-      .packages = "macha", .options.redis=list(chunkSize=10), .noexport = c("Nmacha", "putative_peaks.l", "composite_groups.l"),
-      .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(putative_peaks.l))
-    ) %dopar% {
-      cat("\rWarpcombine peaks: ", round(i/l.groups,2), "      ")
+  output = foreach (
+    g. = as.numeric(names(putative_peaks.l)), pps = putative_peaks.l, cgs = composite_groups.l[composite_groups.l.o], i = icount(),
+    .packages = "macha", .options.redis=list(chunkSize=10), .noexport = c("Nmacha", "putative_peaks.l", "composite_groups.l"),
+    .errorhandling = 'pass', .final = function(x) collect_errors(x, names = names(putative_peaks.l))
+  ) %dopar% {
+    cat("\rWarpcombine peaks: ", round(i/l.groups,2), "      ")
 
-      setkey(cgs, rt)
-      cgs.l = split(cgs, by="m")
+    setkey(cgs, rt)
+    cgs.l = split(cgs, by="m")
 
-      for (r in seq_len(nrow(pps))) { #Find actual peak RTs
-        x = pps[r]
-        rt = cgs.l[[x$m]][abs(rt - x$location)<1][i == max(i,na.rm=T)]$rt
-        pps[r,location := rt]
-      }
-
-
-
-      #k = pps[order(location)][,{ sum(diff(location)>4)+1 }]
-      #d = pps[,.(location, mz)]
-
-      #d_clust <- Mclust(as.matrix(d), G=(k-1):(k+2))
-      #k <- dim(d_clust$z)[2]
-      #plot(d_clust)
-
-
-      d = density(pps$location, bw = peak_group_bw)
-      lms = d$y %>% { .[.<0.001] = 0; . } %>% localMaxima
-      k = length(lms)
-
-      #multid = sapply(seq(0.1, 3, 0.2), function(bw) {
-      #  density(pps$location, bw = bw)$y %>% { .[.<0.001] = 0; . } %>% localMaxima %>% length
-      #  })
-
-      if (k == nrow(pps)) {
-        km = list(cluster = seq_len(nrow(pps)), centers = cbind(location=pps$location))
-      } else {
-        #km = kmeans(pps[,.(location, mz)], k)
-        km = kmeans(pps[,.(location, mz)], centers = cbind(d$x[lms], mean(pps$mz,na.rm=T)))
-      }
-      pps[,k:=km$cluster]
-
-
-
-      if (F) {
-        plot(d)
-        grid.arrange(
-          ggplot(pps) + geom_point(aes(x = location, y=mz, colour = factor(m)), alpha = 0.5, size = 3),
-          ggplot(pps) + geom_segment(aes(x = rtmin, xend = rtmax, y=mz, yend=mz, colour = factor(m)), alpha = 0.3, size = 2),
-          ggplot(cgs) + geom_line(aes(x=rt, y = i, colour = factor(m))),
-          ggplot(pps) + geom_point(aes(x = location, y=mz, colour = k %>% factor), size = 3, alpha = 0.5),
-          ncol=2
-        )
-      }
-
-
-      # Refit Peaks
-      #components = fitseeds(eic, seeds = seeds, unrelated.dist = 30, const.upper = const.upper, const.lower = const.lower, do.plot = do.plot)
-
-      keep.center = table(km$cluster) %>% { .[order(as.numeric(names(.)))] }  %>% { . >= min_peaks }
-      pps = pps[k %in% which(keep.center)]
-
-      seeds = km$centers[keep.center,"location"]
-
-
-      okm = order(seeds)
-      rt.ts = cgs$rt %>% unique %>% {.[order(.)]}
-
-      seeds = diff(seeds) %>% { cbind(seeds, seeds-c(max(./2),./2), seeds+c(./2,max(./2))) }
-      seeds[] = seeds %>% { approx(rt.ts, seq_along(rt.ts), xout = .)$y } %>% round
-      seeds[is.na(seeds[,2]),2] = 0
-      seeds[is.na(seeds[,3]),3] = length(rt.ts)
-      seeds = as.matrix(seeds)
-
-      setkey(cgs, m, rt)
-
-      seed.constraints = pps[,.(loc = mean(location), scl = mean(scale), shp = mean(shape), fct = mean(factor), bsl = mean(baseline)),by="k"]
-      seed.constraints = pps[,.(loc = mean(location), scl = 1, shp = 0, fct = mean(factor), bsl = mean(baseline)),by="k"]
-      #seed.constraints$shape = mean(shape)
-
-      refit_constraints_range = c(1, 0.25, 0.25, Inf)
-      seed.constraints.var.m = rep(refit_constraints_range, each = nrow(seed.constraints))
-      consts = seed.constraints[,.(loc, scl, shp, fct)] %>% as.matrix %>% { list(.-seed.constraints.var.m, . + seed.constraints.var.m) }
-
-      consts[[1]][,"fct"] = 0
-      #consts[[1]][,"loc"] = max(0, consts[[1]][,"loc"])
-      #consts[[2]][,"loc"] = min(consts[[2]][,"loc"], max(rt.ts, na.rm=T))
-
-
-      cgs[is.na(i), i:= as.integer(min(cgs$i,na.rm=T)/2)]
-
-      components = lapply(split(cgs, by ="m"), function(x) {
-        comps = fitseeds(x[,.(rt=rt, i = i, ii = i, b = b, bb = b)] %>% as.matrix, seeds = seeds, unrelated.dist = 30, parscale = parscale, const.lower = consts[[1]], const.upper = consts[[2]], do.plot = F)
-
-        mzs = sapply(seq_len(ncol(comps)), function(c) {
-          sum(curvemany(c(comps[1:3,c],1,0), x$rt) %>% { ./sum(.,na.rm=T) } * x$mz, na.rm=T)
-          })
-
-        comps %>%  rbind(., m = rep(x$m[[1]], ncol(.)), mz = mzs, ccclust = g., cc = okm)
-
-      }) %>% do.call(what = cbind) %>% aperm %>% data.table
-
-      components
+    for (r in seq_len(nrow(pps))) { #Find actual peak RTs
+      x = pps[r]
+      rt = cgs.l[[x$m]][abs(rt - x$location)<1][i == max(i,na.rm=T)]$rt
+      pps[r,location := rt]
     }
+
+
+
+    #k = pps[order(location)][,{ sum(diff(location)>4)+1 }]
+    #d = pps[,.(location, mz)]
+
+    #d_clust <- Mclust(as.matrix(d), G=(k-1):(k+2))
+    #k <- dim(d_clust$z)[2]
+    #plot(d_clust)
+
+
+    d = density(pps$location, bw = peak_group_bw)
+    lms = d$y %>% { .[.<0.001] = 0; . } %>% localMaxima
+    k = length(lms)
+
+    #multid = sapply(seq(0.1, 3, 0.2), function(bw) {
+    #  density(pps$location, bw = bw)$y %>% { .[.<0.001] = 0; . } %>% localMaxima %>% length
+    #  })
+
+    if (k == nrow(pps)) {
+      km = list(cluster = seq_len(nrow(pps)), centers = cbind(location=pps$location))
+    } else {
+      #km = kmeans(pps[,.(location, mz)], k)
+      km = kmeans(pps[,.(location, mz)], centers = cbind(d$x[lms], mean(pps$mz,na.rm=T)))
+    }
+    pps[,k:=km$cluster]
+
+
+
+    if (F) {
+      plot(d)
+      grid.arrange(
+        ggplot(pps) + geom_point(aes(x = location, y=mz, colour = factor(m)), alpha = 0.5, size = 3),
+        ggplot(pps) + geom_segment(aes(x = rtmin, xend = rtmax, y=mz, yend=mz, colour = factor(m)), alpha = 0.3, size = 2),
+        ggplot(cgs) + geom_line(aes(x=rt, y = i, colour = factor(m))),
+        ggplot(pps) + geom_point(aes(x = location, y=mz, colour = k %>% factor), size = 3, alpha = 0.5),
+        ncol=2
+      )
+    }
+
+
+    # Refit Peaks
+    #components = fitseeds(eic, seeds = seeds, unrelated.dist = 30, const.upper = const.upper, const.lower = const.lower, do.plot = do.plot)
+
+    keep.center = table(km$cluster) %>% { .[order(as.numeric(names(.)))] }  %>% { . >= min_peaks }
+    pps = pps[k %in% which(keep.center)]
+
+    seeds = km$centers[keep.center,"location"]
+
+
+    okm = order(seeds)
+    rt.ts = cgs$rt %>% unique %>% {.[order(.)]}
+
+    seeds = diff(seeds) %>% { cbind(seeds, seeds-c(max(./2),./2), seeds+c(./2,max(./2))) }
+    seeds[] = seeds %>% { approx(rt.ts, seq_along(rt.ts), xout = .)$y } %>% round
+    seeds[is.na(seeds[,2]),2] = 0
+    seeds[is.na(seeds[,3]),3] = length(rt.ts)
+    seeds = as.matrix(seeds)
+
+    setkey(cgs, m, rt)
+
+    seed.constraints = pps[,.(loc = mean(location), scl = mean(scale), shp = mean(shape), fct = mean(factor), bsl = mean(baseline)),by="k"]
+    seed.constraints = pps[,.(loc = mean(location), scl = 1, shp = 0, fct = mean(factor), bsl = mean(baseline)),by="k"]
+    #seed.constraints$shape = mean(shape)
+
+    refit_constraints_range = c(1, 0.25, 0.25, Inf)
+    seed.constraints.var.m = rep(refit_constraints_range, each = nrow(seed.constraints))
+    consts = seed.constraints[,.(loc, scl, shp, fct)] %>% as.matrix %>% { list(.-seed.constraints.var.m, . + seed.constraints.var.m) }
+
+    consts[[1]][,"fct"] = 0
+    #consts[[1]][,"loc"] = max(0, consts[[1]][,"loc"])
+    #consts[[2]][,"loc"] = min(consts[[2]][,"loc"], max(rt.ts, na.rm=T))
+
+
+    cgs[is.na(i), i:= as.integer(min(cgs$i,na.rm=T)/2)]
+
+    components = lapply(split(cgs, by ="m"), function(x) {
+      comps = fitseeds(x[,.(rt=rt, i = i, ii = i, b = b, bb = b)] %>% as.matrix, seeds = seeds, unrelated.dist = 30, parscale = parscale, const.lower = consts[[1]], const.upper = consts[[2]], do.plot = F)
+
+      mzs = sapply(seq_len(ncol(comps)), function(c) {
+        sum(curvemany(c(comps[1:3,c],1,0), x$rt) %>% { ./sum(.,na.rm=T) } * x$mz, na.rm=T)
+      })
+
+      comps %>%  rbind(., m = rep(x$m[[1]], ncol(.)), mz = mzs, ccclust = g., cc = okm)
+
+    }) %>% do.call(what = cbind) %>% aperm %>% data.table
+
+    components
+  }
   Nmacha$cc = output$list
   Nmacha$cc_error = output$errors
 
