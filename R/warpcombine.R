@@ -1,9 +1,9 @@
 
 
-warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detected = 5, min_mchan_length = 2, foreach_register_backend = NULL) {
+warpcombine = function(Nmacha, rt.window = 10, scan.padding = 40, m.align_to = 2, min_files_detected = 5, min_mchan_length = 2, foreach_register_backend = NULL) {
   if (is.null(Nmacha$trace_cache)) stop("Please populate Nmacha$trace_cache first.")
 
-  print("Starting. "); print("\n"); lt = Sys.time()
+  cat("Starting. \n"); lt = Sys.time()
   m.c_mchan = Nmacha$m.c[,.SD[Nmacha$m[[m[1]]]$r_mchan,,on="r",nomatch=0],by="m"]
   mchan_m_g = m.c_mchan[Nmacha$m.c_g,,on="m.c."]
 
@@ -21,21 +21,21 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detect
 
   ms = seq_along(Nmacha$m)
 
-  print("Splitting Up Jobs. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+  cat("Splitting Up Jobs. "); print(Sys.time() - lt); lt = Sys.time()
   cs.l = split(mchan_m_g, by="g")
 
   trace_cache = Nmacha$trace_cache[mchan_m_g[,.(mchan, m, g)] %>% { .[!duplicated(.)] },,on=c("mchan","m")]
   trace_cache.l = split(trace_cache,by="g")
   trace_cache.l.o = match(names(cs.l), names(trace_cache.l))
 
-  print("Aggregating trace and group information. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+  cat("Aggregating trace and group information. "); print(Sys.time() - lt);lt = Sys.time()
   #trace_ranges = Nmacha$trace_cache[, .(rtmin = min(rt, na.rm=T), rtmax = max(rt, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("m", "mchan")]
   #g_ranges = mchan_m_g[,.(rtmin = min(rtmin, na.rm=T), rtmax = max(rtmax, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("g")]
   trace_ranges = Nmacha$trace_cache[, .(rtmin = min(rt, na.rm=T), rtmax = max(rt, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("m", "mchan")]
   g_ranges = mchan_m_g[,.(rtmin = min(rtmin, na.rm=T), rtmax = max(rtmax, na.rm=T), mzmin = min(mz, na.rm=T), mzmax = max(mz, na.rm=T)),by=c("g")]
 
 
-  print("Searching for missing traces. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+  cat("Searching for missing traces. "); print(Sys.time() - lt); lt = Sys.time()
 
   x = trace_ranges[,.(m = as.integer(m), mchan = as.integer(mchan), rtmin = as.integer(rtmin*10), rtmax = as.integer(rtmax*10), mzmin = as.integer(mzmin*1E5), mzmax = as.integer(mzmax*1E5))]
   y = g_ranges[,.(g = as.integer(g), rtmin = as.integer(rtmin*10), rtmax = as.integer(rtmax*10), mzmin = as.integer(mzmin*1E5), mzmax = as.integer(mzmax*1E5))]
@@ -48,12 +48,12 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detect
   group_traces = x[y, .(m, g, mchan), on=.(rtmin <= rtmax, rtmax >= rtmin, mzmin <= mzmax, mzmax >= mzmin), nomatch=F, allow.cartesian = T]
   group_traces = group_traces %>% { .[!duplicated(.)] }
 
-  print("Splitting up original traces. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+  cat("Splitting up original traces. "); print(Sys.time() - lt); lt = Sys.time()
 
   raw_traces.l = split(Nmacha$trace_cache[group_traces,,on=c("mchan", "m"), allow.cartesian = T],by="g")
   raw_traces.l.o = match(names(cs.l), names(raw_traces.l))
 
-  print("Starting foreach loop. "); print(Sys.time() - lt); print("\n"); lt = Sys.time()
+  cat("Starting foreach loop. "); print(Sys.time() - lt); lt = Sys.time()
 
   ug. = Nmacha$m.c_g$g %>% unique; lug. = length(ug.)
   #g. = "231"; lassign(cs = cs.l[[g.]], trace_cache = trace_cache.l[[g.]], raw_traces = raw_traces.l[[g.]])
@@ -68,7 +68,7 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detect
     cat("\rWarpcombine: ", round(i/lug.,2), " - ", i, "          ")
 
     trange = cs[,.(rtmin,rtmax)] %>% range
-    trange.lim = c( trange[1]-rt.padding, trange[2]+rt.padding)
+    trange.lim = c( trange[1]-rt.window, trange[2]+rt.window)
     mrange = cs[,(mz/1E6*1) %>% { c(mz - ., mz+.) }] %>% range
 
     #if (!cs$m %>% unique %>% length == length(Nmacha$m)) warning("Missing peaks from some files.")
@@ -133,16 +133,17 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detect
     })
 
 
-    for (i in seq_len(dim(eic.m)[3])[-m.align_to]) { #cat(m.)
+    if (!m.align_to %in% names(eic.l) %>% as.numeric) {m.align_to = sample(names(eic.l) %>% as.numeric, 1)}
+    for (i in seq_len(dim(eic.m)[3])) { #cat(m.)
       m. = names(eic.l)[i] %>% as.numeric
       dt = dtw(
-        eic.m[,"intensity",i] %>% { c(seq(.[1]/10, .[1], length.out=20), ., seq(.[length(.)], .[length(.)]/10, length.out=20)) },
-        eic.m[,"intensity",m.align_to] %>% { c(seq(.[1]/10, .[1], length.out=20), ., seq(.[length(.)], .[length(.)]/10, length.out=20)) },
-        open.end = F, open.begin = F, window.type = "none", keep=F, step.pattern = asymmetricP2)
+        eic.m[,"intensity",as.character(m.)] %>% { c(seq(.[1]/10, .[1], length.out=scan.padding), ., seq(.[length(.)], .[length(.)]/10, length.out=scan.padding)) },
+        eic.m[,"intensity",m.align_to %>% as.character] %>% { c(seq(.[1]/10, .[1], length.out=scan.padding), ., seq(.[length(.)], .[length(.)]/10, length.out=scan.padding)) },
+        open.end = F, open.begin = F, window.type = "none", keep=F, step.pattern = asymmetricP2, keep.internals = T)
 
       #plot(dt$index1, dt$index2)
-      i1 = dt$index1 %>% { .[20:(length(.)-20)] - 20 } %>% { .[.<1] = 1; .[.>length(eic.m[,"rt",i])] = length(eic.m[,"rt",i]); . }
-      i2 = dt$index2 %>% { .[20:(length(.)-20)] - 20 } %>% { .[.<1] = 1; .[.>length(eic.m[,"rt",i])] = length(eic.m[,"rt",i]); . }
+      i1 = dt$index1 %>% { .[scan.padding:(length(.)-scan.padding)] - scan.padding } %>% { .[.<1] = 1; .[.>length(eic.m[,"rt",i])] = length(eic.m[,"rt",i]); . }
+      i2 = dt$index2 %>% { .[scan.padding:(length(.)-scan.padding)] - scan.padding } %>% { .[.<1] = 1; .[.>length(eic.m[,"rt",i])] = length(eic.m[,"rt",i]); . }
       sms = smooth.spline(eic.m[i1,"rt",i], eic.m[i2,"rt",1], spar = .5)
       #plot(eic.m[m.,i1,"rt"], eic.m[1,i2,"rt"]); lines(sms)
 
@@ -172,14 +173,13 @@ warpcombine = function(Nmacha, rt.padding = 10, m.align_to = 2, min_files_detect
 
     list(composite_groups = roicor[,g:=cs$g[1]], putative_peaks = cs[,.(m, m.c., g, location, scale, shape, factor, baseline, mz, rtmin, rtmax)])
   }
-  cat("Finished foreach loop. ", round(Sys.time()-lt,0), "\n");  lt = Sys.time()
+  cat("Finished foreach loop. ");  print(Sys.time() - lt); lt = Sys.time()
 
-  cat("\n\n")
   Nmacha$warpcombine_error = output$error
   Nmacha$composite_groups = data.table::rbindlist(lapply(output$list, '[[', 'composite_groups'))
   Nmacha$putative_peaks = data.table::rbindlist(lapply(output$list, '[[', 'putative_peaks'))
 
-  cat("Complete. ", round(Sys.time()-lt,0), "\n");  lt = Sys.time()
+  cat("Complete. ");  print(Sys.time() - lt); lt = Sys.time()
 
   return(Nmacha)
 }
