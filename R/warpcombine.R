@@ -255,6 +255,9 @@ warpcombine_peaks = function(Nmacha, parscale = c(0.1, 0.1, 0.1, 1E5, 1E5), ndep
     #components = fitseeds(eic, seeds = seeds, unrelated.dist = 30, const.upper = const.upper, const.lower = const.lower, do.plot = do.plot)
 
     keep.center = table(km$cluster) %>% { .[order(as.numeric(names(.)))] }  %>% { . >= min_peaks }
+
+    if (sum(keep.center) > 10) { stop("Too many peaks to co-optimize.") }
+
     pps = pps[k %in% which(keep.center)]
 
     seeds = km$centers[keep.center,"location"]
