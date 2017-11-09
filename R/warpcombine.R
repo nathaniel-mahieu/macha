@@ -290,7 +290,7 @@ warpcombine_peaks = function(Nmacha, parscale = c(0.1, 0.1, 0.1, 1E5, 1E5), ndep
     cgs[is.na(i), i:= as.integer(min(cgs$i,na.rm=T)/2)]
 
     components = lapply(split(cgs, by ="m"), function(x) {
-      comps = fitseeds(x[,.(rt=rt, i = i, ii = i, b = b, bb = b)] %>% as.matrix, seeds = seeds, unrelated.dist = 30, parscale = parscale, const.lower = consts[[1]], const.upper = consts[[2]], do.plot = F)
+      comps = fitseeds(x[,.(rt=rt, i = i, ii = i, b = b, bb = b)] %>% as.matrix, seeds = seeds, unrelated.dist = 30, parscale = parscale, ndeps = ndeps, const.lower = consts[[1]], const.upper = consts[[2]], do.plot = F)
 
       mzs = sapply(seq_len(ncol(comps)), function(c) {
         sum(curvemany(c(comps[1:3,c],1,0), x$rt) %>% { ./sum(.,na.rm=T) } * x$mz, na.rm=T)
