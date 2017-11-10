@@ -275,7 +275,7 @@ warpcombine_peaks = function(Nmacha, parscale = c(0.1, 0.1, 0.1, 1E5, 1E5), ndep
     setkey(cgs, m, rt)
 
     seed.constraints = pps[,.(loc = mean(location), scl = mean(scale), shp = mean(shape), fct = mean(factor), bsl = mean(baseline)),by="k"]
-    seed.constraints = pps[,.(loc = mean(location), scl = 1, shp = 0, fct = mean(factor), bsl = mean(baseline)),by="k"]
+    #seed.constraints = pps[,.(loc = mean(location), scl = 1, shp = 0, fct = mean(factor), bsl = mean(baseline)),by="k"]
     #seed.constraints$shape = mean(shape)
 
     refit_constraints_range = c(1, 0.25, 0.25, Inf)
