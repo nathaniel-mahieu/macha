@@ -39,13 +39,29 @@ fancy_scientific <- function(l) {
 }
 
 
-theme_nate <- function(...)
+theme_natex <- function(...)
 {
   theme_ipsum_rc(...) %+replace%
     theme(
       panel.background = element_rect(fill="white", colour = "white"),
       panel.grid.major = element_line(colour="grey90"),
       panel.grid.minor = element_line(colour="grey95"),
+
+      legend.position="top",
+      legend.key = element_blank()
+    )
+}
+
+
+theme_nate <- function(...)
+{
+  theme_light(...) %+replace%
+    theme(
+      panel.background = element_rect(fill="white", colour = "white"),
+      strip.background = element_rect(fill="white"),
+      panel.grid.major = element_line(colour="grey90"),
+      panel.grid.minor = element_line(colour="grey95"),
+      strip.text = element_text(colour="black"),
 
       legend.position="top",
       legend.key = element_blank()
