@@ -74,7 +74,7 @@ variance_est = function(y.d) {
   y.d.q[(lnna+1):length(y.d)] = y.d.q[lnna]
   y.d.q[is.na(y.d.q)] = mean(y.d.q, na.rm=T)
 
-  ydq.f = filter(y.d.q, rep(1/n, n))
+  ydq.f = stats::filter(y.d.q, rep(1/n, n))
   fnna = which(!is.na(ydq.f))[1]
   lnna = which(!is.na(ydq.f)) %>% tail(n=1)
   ydq.f[1:(fnna-1)] = ydq.f[fnna]
@@ -134,7 +134,7 @@ filter_all_the_way_down = function(x, n) {
   x2 = rep(NA, length(x))
   for (nn in seq(n, 1, by=-2)) {
     nas = is.na(x2)
-    x2[nas] = filter(x,rep(1/nn,nn))[nas]
+    x2[nas] = stats::filter(x,rep(1/nn,nn))[nas]
   }
   x2
 }
