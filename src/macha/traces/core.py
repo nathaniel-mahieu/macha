@@ -9,7 +9,7 @@ m/z is already known.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numba as nb
 import numpy as np
@@ -18,7 +18,7 @@ from scipy.optimize import minimize
 
 from .._kernels import csr_from_labels
 from ..run import MSRun
-from .tracking import solve_links, trace_stats, track
+from .tracking import kf_loglik, solve_links, trace_stats, track, track_kf
 
 
 @dataclass
@@ -85,8 +85,12 @@ class TrackParams:
     gap_cost: float = 0.75  # NLL per missing scan
     intensity_sigma: float = 0.9  # sd of log intensity ratio between consecutive scans
     intensity_cap: float = 3.0
-    forget: float = 0.97  # per-scan decay of a trace's m/z memory
-    drift_ppm: float = 0.15  # per-scan random-walk allowance for a trace's m/z
+    motion: str = "velocity"  # "velocity": constant-velocity Kalman per trace; "level": forgetting mean
+    q_ppm: float | None = None  # velocity model: acceleration noise (ppm per scan^1.5); learned if None
+    v0_ppm: float = 0.2  # velocity model: prior sd of a new trace's drift, ppm per scan
+    q_init: float = 0.05  # velocity model: generous first-pass value before calibration
+    forget: float = 0.97  # level model: per-scan decay of a trace's m/z memory
+    drift_ppm: float = 0.15  # level model: per-scan random-walk allowance for a trace's m/z
     close_gaps: int = 8  # second pass: rejoin trace ends/starts up to this many missing scans
     min_points: int = 5
     calibrate: bool = True
@@ -227,10 +231,23 @@ def _compact(label) -> np.ndarray:
     return out
 
 
-def _track_once(run: MSRun, p: TrackParams, pm: PrecisionModel) -> np.ndarray:
-    return track(run.mz, run.intensity.astype(np.float64), run.offsets, pm.a, pm.b, pm.c, p.max_gap,
-                 p.gate, p.max_ppm, p.birth_cost, p.gap_cost, p.intensity_sigma, p.intensity_cap,
-                 p.forget, p.drift_ppm)
+def _track_once(run: MSRun, p: TrackParams, pm: PrecisionModel, q: float | None = None) -> np.ndarray:
+    it = run.intensity.astype(np.float64)
+    if p.motion == "velocity":
+        return track_kf(run.mz, it, run.offsets, pm.a, pm.b, pm.c, p.max_gap, p.gate, p.max_ppm, p.birth_cost,
+                        p.gap_cost, p.intensity_sigma, p.intensity_cap, p.q_init if q is None else q, p.v0_ppm)
+    return track(run.mz, it, run.offsets, pm.a, pm.b, pm.c, p.max_gap, p.gate, p.max_ppm, p.birth_cost,
+                 p.gap_cost, p.intensity_sigma, p.intensity_cap, p.forget, p.drift_ppm)
+
+
+def fit_motion(run: MSRun, label: np.ndarray, pm: PrecisionModel, v0_ppm: float = 0.2,
+               grid=(0.0, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.4)) -> tuple[float, list]:
+    """Acceleration noise maximising the (capped) innovation likelihood of the given traces."""
+    order, offs = csr_from_labels(label)
+    it = run.intensity.astype(np.float64)
+    lls = [kf_loglik(order, offs, run.scan_of_point, run.mz, it, pm.a, pm.b, pm.c, q, v0_ppm, 12.5)[0]
+           for q in grid]
+    return float(grid[int(np.argmax(lls))]), lls
 
 
 def close_gaps(run: MSRun, label: np.ndarray, p: TrackParams, pm: PrecisionModel) -> np.ndarray:
@@ -270,15 +287,21 @@ def detect_traces(run: MSRun, params: TrackParams | None = None, **overrides) ->
     timings = {}
     t0 = time.perf_counter()
     pm = p.precision or PrecisionModel.initial(run)
-    label = _track_once(run, p, pm)
+    q = p.q_ppm
+    label = _track_once(run, p, pm, q)
     timings["track_pass1"] = time.perf_counter() - t0
-    if p.calibrate and p.precision is None:
+    if p.calibrate and (p.precision is None or (p.motion == "velocity" and p.q_ppm is None)):
         t1 = time.perf_counter()
         counts = np.bincount(label)
         good = np.where(counts[label] >= 8, label, -1)
-        pm = PrecisionModel.fit_from_traces(run, good, start=pm)
-        label = _track_once(run, p, pm)
+        if p.precision is None:
+            pm = PrecisionModel.fit_from_traces(run, good, start=pm)
+        if p.motion == "velocity" and p.q_ppm is None:
+            q, _ = fit_motion(run, good, pm, p.v0_ppm)
+        label = _track_once(run, p, pm, q)
         timings["calibrate_track_pass2"] = time.perf_counter() - t1
+    if p.motion == "velocity":
+        p = replace(p, q_ppm=q if q is not None else p.q_init)
     if p.close_gaps > 0 and label.size:
         t2 = time.perf_counter()
         label = close_gaps(run, label, p, pm)

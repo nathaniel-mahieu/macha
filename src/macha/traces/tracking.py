@@ -328,3 +328,201 @@ def trace_stats(label, order, offsets, scan, mz, intensity, ppm_a, ppm_b, ppm_c)
         first_int[t] = intensity[order[a]]
         last_int[t] = intensity[order[b - 1]]
     return mean, se, sd_ppm, s0, s1, npt, apex_scan, apex_int, total, first_int, last_int
+
+
+@nb.njit(cache=True)
+def track_kf(mz, intensity, offsets, ppm_a, ppm_b, ppm_c, max_gap, gate, max_ppm, birth_cost,
+             gap_cost, int_sigma, int_cap, q_ppm, v0_ppm):
+    """Like :func:`track` but each trace is a constant-velocity Kalman filter.
+
+    State is (m/z, drift per scan) with covariance P.  Prediction over ``ds``
+    scans uses F = [[1, ds], [0, 1]] and white-acceleration process noise of
+    spectral density ``(q_ppm * 1e-6 * mz)^2`` per scan^3; a new trace starts
+    with zero drift and prior sd ``v0_ppm`` ppm/scan.  Gating and costs use
+    the innovation variance, so traces follow steady drift without widening
+    the m/z window that keeps neighbouring ions apart.
+    """
+    n = mz.shape[0]
+    n_scans = offsets.shape[0] - 1
+    label = np.full(n, -1, np.int64)
+    m = np.zeros(n)
+    v = np.zeros(n)
+    p00 = np.zeros(n)
+    p01 = np.zeros(n)
+    p11 = np.zeros(n)
+    last_scan = np.zeros(n, np.int64)
+    last_int = np.zeros(n)
+    n_tracks = 0
+    active = np.empty(n, np.int64)
+    n_active = 0
+    tmp = np.empty(n, np.int64)
+    pred = np.empty(n)
+    cand_p = np.empty(1024, np.int64)
+    cand_t = np.empty(1024, np.int64)
+    cand_g = np.empty(1024)
+    for s in range(n_scans):
+        a, b = offsets[s], offsets[s + 1]
+        w = 0
+        for i in range(n_active):
+            t = active[i]
+            if s - last_scan[t] - 1 <= max_gap:
+                active[w] = t
+                w += 1
+        n_active = w
+        for i in range(n_active):
+            t = active[i]
+            pred[i] = m[t] + v[t] * (s - last_scan[t])
+        for i in range(1, n_active):
+            key_t = active[i]
+            key_m = pred[i]
+            j = i - 1
+            while j >= 0 and pred[j] > key_m:
+                active[j + 1] = active[j]
+                pred[j + 1] = pred[j]
+                j -= 1
+            active[j + 1] = key_t
+            pred[j + 1] = key_m
+        npts = b - a
+        if npts == 0:
+            continue
+        nc = 0
+        lo = 0
+        for ip in range(npts):
+            x = mz[a + ip]
+            it = intensity[a + ip]
+            sig_ppm = np.sqrt(ppm_a * ppm_a + (ppm_b * it ** (-ppm_c)) ** 2)
+            vp = (sig_ppm * 1e-6 * x) ** 2
+            win = max_ppm * 1e-6 * x
+            while lo < n_active and pred[lo] < x - win:
+                lo += 1
+            j = lo
+            while j < n_active and pred[j] <= x + win:
+                t = active[j]
+                ds = s - last_scan[t]
+                q = (q_ppm * 1e-6 * x) ** 2
+                s00 = p00[t] + 2 * ds * p01[t] + ds * ds * p11[t] + q * ds ** 3 / 3.0
+                var = s00 + vp
+                d = x - pred[j]
+                d2 = d * d / var
+                if d2 < gate * gate:
+                    gap = ds - 1
+                    r = np.log(it / last_int[t])
+                    ci = 0.5 * r * r / (int_sigma * int_sigma * ds)
+                    if ci > int_cap:
+                        ci = int_cap
+                    cost = 0.5 * d2 + 0.5 * np.log(var / vp) + ci + gap_cost * gap
+                    if cost < birth_cost:
+                        if nc >= cand_p.shape[0]:
+                            newcap = cand_p.shape[0] * 2
+                            cp2 = np.empty(newcap, np.int64)
+                            ct2 = np.empty(newcap, np.int64)
+                            cg2 = np.empty(newcap)
+                            cp2[:nc] = cand_p[:nc]
+                            ct2[:nc] = cand_t[:nc]
+                            cg2[:nc] = cand_g[:nc]
+                            cand_p, cand_t, cand_g = cp2, ct2, cg2
+                        cand_p[nc] = ip
+                        cand_t[nc] = j
+                        cand_g[nc] = birth_cost - cost
+                        nc += 1
+                j += 1
+        match = solve_links(cand_p[:nc], cand_t[:nc], cand_g[:nc], npts, n_active)
+        n_new = 0
+        for ip in range(npts):
+            x = mz[a + ip]
+            it = intensity[a + ip]
+            sig_ppm = np.sqrt(ppm_a * ppm_a + (ppm_b * it ** (-ppm_c)) ** 2)
+            R = (sig_ppm * 1e-6 * x) ** 2
+            if match[ip] >= 0:
+                t = active[match[ip]]
+                ds = s - last_scan[t]
+                q = (q_ppm * 1e-6 * x) ** 2
+                a00 = p00[t] + 2 * ds * p01[t] + ds * ds * p11[t] + q * ds ** 3 / 3.0
+                a01 = p01[t] + ds * p11[t] + q * ds * ds / 2.0
+                a11 = p11[t] + q * ds
+                mp = m[t] + v[t] * ds
+                S = a00 + R
+                k0 = a00 / S
+                k1 = a01 / S
+                y = x - mp
+                m[t] = mp + k0 * y
+                v[t] = v[t] + k1 * y
+                p00[t] = (1 - k0) * a00
+                p01[t] = (1 - k0) * a01
+                p11[t] = a11 - k1 * a01
+            else:
+                t = n_tracks
+                n_tracks += 1
+                m[t] = x
+                v[t] = 0.0
+                p00[t] = R
+                p01[t] = 0.0
+                p11[t] = (v0_ppm * 1e-6 * x) ** 2
+                tmp[n_new] = t
+                n_new += 1
+            last_scan[t] = s
+            last_int[t] = it
+            label[a + ip] = t
+        if n_new:
+            for i in range(n_active):
+                t = active[i]
+                pred[i] = m[t]
+            merged = np.empty(n_active + n_new, np.int64)
+            i = 0
+            j = 0
+            k = 0
+            while i < n_active or j < n_new:
+                if j >= n_new or (i < n_active and pred[i] <= m[tmp[j]]):
+                    merged[k] = active[i]
+                    i += 1
+                else:
+                    merged[k] = tmp[j]
+                    j += 1
+                k += 1
+            active[: n_active + n_new] = merged
+            n_active += n_new
+    return label
+
+
+@nb.njit(cache=True)
+def kf_loglik(order, offs, scan, mz, intensity, ppm_a, ppm_b, ppm_c, q_ppm, v0_ppm, cap):
+    """Innovation log-likelihood of traces under a constant-velocity model (per-point terms capped)."""
+    total = 0.0
+    count = 0
+    for t in range(offs.shape[0] - 1):
+        a, b = offs[t], offs[t + 1]
+        if b - a < 6:
+            continue
+        i0 = order[a]
+        x0 = mz[i0]
+        sig0 = np.sqrt(ppm_a * ppm_a + (ppm_b * intensity[i0] ** (-ppm_c)) ** 2) * 1e-6 * x0
+        m_ = x0
+        v_ = 0.0
+        p00_ = sig0 * sig0
+        p01_ = 0.0
+        p11_ = (v0_ppm * 1e-6 * x0) ** 2
+        last = scan[i0]
+        for qq in range(a + 1, b):
+            i = order[qq]
+            x = mz[i]
+            ds = scan[i] - last
+            q = (q_ppm * 1e-6 * x) ** 2
+            a00 = p00_ + 2 * ds * p01_ + ds * ds * p11_ + q * ds ** 3 / 3.0
+            a01 = p01_ + ds * p11_ + q * ds * ds / 2.0
+            a11 = p11_ + q * ds
+            mp = m_ + v_ * ds
+            R = (np.sqrt(ppm_a * ppm_a + (ppm_b * intensity[i] ** (-ppm_c)) ** 2) * 1e-6 * x) ** 2
+            S = a00 + R
+            y = x - mp
+            term = 0.5 * (y * y / S + np.log(S / R))
+            total -= min(term, cap)
+            count += 1
+            k0 = a00 / S
+            k1 = a01 / S
+            m_ = mp + k0 * y
+            v_ = v_ + k1 * y
+            p00_ = (1 - k0) * a00
+            p01_ = (1 - k0) * a01
+            p11_ = a11 - k1 * a01
+            last = scan[i]
+    return total, count
