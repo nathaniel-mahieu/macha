@@ -15,7 +15,8 @@ import pandas as pd
 from common import NAV, REPORTS
 from macha.report import Page
 
-MODULES = ["bench_io", "bench_traces", "bench_baseline", "bench_peaks", "bench_annotate", "bench_align"]
+MODULES = ["bench_io", "bench_traces", "bench_baseline", "bench_peaks", "bench_annotate", "bench_scan_graph",
+           "bench_align"]
 
 
 def load(name):
@@ -36,6 +37,12 @@ def index():
         h = s[s.dataset == "syn-hard"].set_index("method")
         tiles.append(("Traces: ARI, hard synthetic", f"{h.loc['macha', 'ari']:.3f}",
                       f"greedy ROI {h.loc['greedy', 'ari']:.3f}, slice {h.loc['slice', 'ari']:.3f}"))
+    sg = load("scan_graph")
+    if sg:
+        r = pd.DataFrame(sg["recall"])
+        r = r[r.scenario == "metabolomics, low abundance"].set_index(["method", "snr_bin"]).recall
+        tiles.append(("Scan graph: compounds found, SNR 10-30", f"{r[('scan', '10-30')]:.0%}",
+                      f"feature-level graph {r[('feature', '10-30')]:.0%} (low-abundance metabolomics)"))
     bl = load("baseline")
     if bl:
         b = pd.DataFrame(bl)
@@ -79,6 +86,10 @@ standard errors, optional EMG mixture refinement (replaces scale-space seeding +
 <li><a href="annotate.html"><b>macha.annotate</b></a>: modulo mass-difference graph (isotopes, adducts, losses,
 charge states, multimers, homologous series) with decoy-calibrated two-groups Bayesian edge posteriors and MAP graph
 partitioning into compounds (extends mz.unity).</li>
+<li><a href="scan_graph.html"><b>macha.annotate.scan_graph</b></a>: the same rules tested between centroids scan by
+scan with ±1 scan bridging; relations aggregated over time, decoy-calibrated, triangle-supported, and partitioned
+into compounds in graph space before any peak detection, under an elution-time prior learned from the run's peak
+width.</li>
 <li><a href="align.html"><b>macha.align</b></a>: drift-trend mixture model of retention-time warps with
 probabilistic, one-per-run correspondence and membership probabilities (replaces grtgmzcor / warpgroup /
 warpcombine DTW).</li>

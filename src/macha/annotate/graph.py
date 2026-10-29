@@ -65,6 +65,78 @@ def gaec(n: int, i: np.ndarray, j: np.ndarray, w: np.ndarray) -> np.ndarray:
     return lab
 
 
+def gaec_coherent(n: int, i: np.ndarray, j: np.ndarray, w: np.ndarray, x: np.ndarray, prec: np.ndarray) -> np.ndarray:
+    """GAEC with a Gaussian co-location prior on a node coordinate ``x`` (e.g. elution time).
+
+    Members of a cluster are modelled as draws around a shared centre with per-node precision ``prec``
+    (0 = no opinion).  The objective is the within-cluster edge weight minus half the precision-weighted
+    scatter of the members' ``x``, so merging clusters A and B gains their joint edge weight minus the
+    Ward increment ``0.5 * P_A P_B / (P_A + P_B) * (xbar_A - xbar_B)^2``.  A chain of relations can then no
+    longer join nodes that are far apart in ``x``, however each link scores.
+    """
+    adj: list[dict] = [dict() for _ in range(n)]
+    for a, b, ww in zip(i.tolist(), j.tolist(), w.tolist()):
+        if a == b:
+            continue
+        v = adj[a].get(b, 0.0) + ww
+        adj[a][b] = v
+        adj[b][a] = v
+    prec = np.where(np.isfinite(x) & np.isfinite(prec), prec, 0.0).astype(float)
+    P0 = prec.copy()
+    P1 = prec * np.where(np.isfinite(x), x, 0.0)
+
+    def gain(a, b):
+        v = adj[a][b]
+        pa, pb = P0[a], P0[b]
+        if pa > 0 and pb > 0:
+            d = P1[a] / pa - P1[b] / pb
+            v -= 0.5 * pa * pb / (pa + pb) * d * d
+        return v
+
+    heap = []
+    for a in range(n):
+        for b in adj[a]:
+            if a < b:
+                g = gain(a, b)
+                if g > 0:
+                    heap.append((-g, a, b))
+    heapq.heapify(heap)
+    parent = np.arange(n)
+    alive = np.ones(n, bool)
+    while heap:
+        negv, a, b = heapq.heappop(heap)
+        if not (alive[a] and alive[b]) or b not in adj[a]:
+            continue
+        if abs(gain(a, b) + negv) > 1e-9:
+            continue  # stale: a fresher entry was pushed when a or b last changed
+        if len(adj[a]) < len(adj[b]):
+            a, b = b, a
+        del adj[a][b]
+        del adj[b][a]
+        for c, wc in adj[b].items():
+            v = adj[a].get(c, 0.0) + wc
+            adj[a][c] = v
+            adj[c][a] = v
+            del adj[c][b]
+        adj[b] = {}
+        alive[b] = False
+        parent[b] = a
+        P0[a] += P0[b]
+        P1[a] += P1[b]
+        # the merged centre moved, so every pair involving a has a new gain
+        for c in adj[a]:
+            g = gain(a, c)
+            if g > 0:
+                heapq.heappush(heap, (-g, min(a, c), max(a, c)))
+    while True:
+        nxt = parent[parent]
+        if np.array_equal(nxt, parent):
+            break
+        parent = nxt
+    _, lab = np.unique(parent, return_inverse=True)
+    return lab
+
+
 def pair_weights(edges: pd.DataFrame, clip: float = 12.0) -> pd.DataFrame:
     """Collapse multiple rule edges between the same two features to their best explanation."""
     a = np.minimum(edges["i"], edges["j"])

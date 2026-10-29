@@ -14,7 +14,8 @@ src/macha/
   traces/         ROI detection by multi-target tracking (LAP + self-calibrated precision model)
   baseline.py     censoring-aware asymmetric Whittaker baselines, detection floor, noise
   peaks.py        persistence peak detection, feature table with m/z standard errors, EMG mixture fits
-  annotate/       modulo mass-difference graph + decoy-calibrated Bayesian edges + MAP graph partition
+  annotate/       modulo mass-difference graph + decoy-calibrated Bayesian edges + MAP graph partition;
+                  scan_graph: the same graph built from centroids scan by scan, before peak detection
   align/          drift-trend mixture model + probabilistic correspondence (+ DTW, references)
   pipeline.py     process_run / process_batch convenience wrappers
   report.py       themed, self-contained HTML explorers
@@ -62,6 +63,14 @@ al.drift         # the fitted drift-trend mixture (K classes chosen by BIC)
 from macha.pipeline import process_batch
 b = process_batch([read_mzml(p) for p in paths])
 b.alignment, b.consensus, b.annotation
+# compounds in graph space, before peak detection: rules tested between centroids scan by scan
+from macha.annotate.scan_graph import repartition, scan_graph
+g = scan_graph(s.traces, polarity=1, peptides=False, bridge=1)
+g.segments       # relation segments over time with evidence and posterior
+g.compounds      # graph-space compounds with time extent and member-centre span
+g.prior          # elution-time prior learned from the run: peak spread, FWHM, member-centre scatter
+g.compound_chromatogram(s.traces, c)   # summed chromatogram of compound c
+repartition(g, s.traces.run, p_merge=0.95)   # re-cut compounds without recomputing relations
 ```
 
 Every step is a plain function on plain data. Run `detect_traces`, `trace_baselines`, `detect_peaks`,
@@ -125,6 +134,8 @@ exists. Full tables are in `reports/*.html` and `reports/*.json`.
 | baseline | RMSE 0.35σ (drift), 0.35σ (constant), 1.15σ (step), 0.30σ (none) | ALS with last-value fill 1.58σ / 2.04σ / 2.82σ / 3.29σ |
 | peaks | F1 0.899, precision 1.00, apex error 0.44 scans | scale-space 0.682, CWT 0.880 |
 | annotation | edge precision 0.987–0.993, compound ARI 0.95–0.97 (3 of 4 sets); at matched precision the posterior ranking out-recalls rule + RT on every set | rule + RT ARI 0.87–0.97 |
+| scan graph | compounds found at SNR 10-30: 59-60 % vs 22-28 % for the feature graph (metabolomics), 86 % vs 67 % (proteomics); at SNR 3-10 in proteomics 42 % vs 5 % | group purity 0.99 (0.93 without the elution-time prior) vs 0.99-1.00 for the feature graph |
+| scan graph (real) | 2.4M centroids in 22 s; Bayesian vs decoy FDR at posterior ≥ 0.9: 1.9 % vs 1.8 % (metabolomics), 4.6 % vs 4.6 % (250 pg); 25-59 % of confident relations have no picked peak; compounds whose members span > 3 learned peak widths: 3.4 % / 0.8 % / 3.4 % | 18.6 % / 9.7 % / 10.8 % without the elution-time prior |
 | annotation (real) | Bayesian vs decoy FDR at posterior ≥ 0.9: 1.6 % vs 1.6 % (250 pg), 2.3 % vs 1.8 % (50 ng), 2.7 % vs 0.5 % (metabolomics, conservative) | — |
 | alignment | three drift trends, strong: F1 0.973, aligned RT spread 1.18 s | global warp 0.951 / 4.91 s, uncorrected 0.948 / 5.70 s, BPC-DTW 0.941 / 6.80 s, density 0.886 |
 | alignment (real) | 850k features from 6 Astral runs in ~90 s; tighter anchor fit than a global warp (σ 0.32 vs 0.47 s) | isotope consistency equal to a global warp |
@@ -155,6 +166,23 @@ per rule and charge. Compounds are the MAP partition (correlation clustering) of
 isotope-envelope selection, an averagine check for a missing monoisotopic peak, and adduct / neutral-mass
 inference. The decoy FDR gives an independent calibration check on real data.
 
+**Scan-level graph (compounds before peaks).** The feature-level graph inherits every miss of peak detection. The
+scan graph runs the modulo test between *centroids*: every centroid of a trace is an anchor, the best partner for
+each rule target is searched in the same scan and, if absent, ±1 scan (bridging partners near the noise floor), and
+partners need not form a trace of their own. Overlapping ~2 Da isotope targets are merged into one family. Per-scan
+instances are cut into relation segments over consecutive scans. A real relation persists: one partner, a residual
+whose mean shrinks as 1/√n, a constant intensity ratio, co-varying intensities. Segments are scored by a weighted
+logistic model of targets vs decoys (target-decoy local FDR), refitted with *triangle support* from the provisional
+graph, because real relations form dense structures and coincidences rarely close triangles. Traces are cut into
+time blocks covering their relations; blocks are nodes, segments are edges, and correlation clustering gives
+compounds with a time extent and a summed compound chromatogram on which peaks can be picked. Relations are local
+in time, so the partition carries an **elution-time prior** at the run's own peak width. Without it, long-lived
+background ions act as hubs that join peaks minutes apart. The prior has two parts. First, the bulk of each
+node's signal must lie within one learned peak width of the relation that links it: an edge is discounted by the
+log share of each node's signal it explains. Second, member signal centres scatter around a shared centre by a
+learned τ plus their own standard error, which adds a Ward penalty inside GAEC. Peaks near the noise floor need
+not apex together; their centres are simply less precise.
+
 **Alignment.** Per-m/z-channel DTW (warpgroup/warpcombine) and a single global curve (`grtgmzcor`) are replaced
 by a **drift-trend mixture**: each compound belongs to a latent class whose P-spline warp is shared by all its
 members. It is learned by EM on anchors with heteroscedastic noise, an outlier component, and BIC to choose K.
@@ -175,4 +203,9 @@ RT of the class mixture, with leave-one-out membership probabilities.
   the filter.
 - Under heavy coalescence (unresolved near-isobaric co-eluting ions), annotation posteriors at the default 0.5
   cut are conservative. The posterior ranking still dominates the rule-based baselines at equal precision.
+- The scan graph's elution-time prior splits long-lived background ions into time-local pieces (background ARI
+  0.28 → 0.02 on synthetic data, while eluting compounds improve 0.86-0.90 → 0.91-0.92). The remaining impurity
+  comes from coincidental relations between ions that truly co-elute. Next: negative evidence between co-eluting
+  blocks with inconsistent intensity ratios, a one-envelope-per-block constraint, and a reverse (heavy-anchored)
+  search so relations whose lighter ion never forms a trace are found too.
 - Profile-mode data must be centroided first. MS2 is not used.

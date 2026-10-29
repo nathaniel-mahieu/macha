@@ -1,0 +1,501 @@
+{
+ "recall": [
+  {
+   "snr_bin": "3-10",
+   "n": 126,
+   "recall": 0.12698412698412698,
+   "method": "scan",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 161,
+   "recall": 0.5962732919254659,
+   "method": "scan",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 125,
+   "recall": 0.968,
+   "method": "scan",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 100,
+   "recall": 1.0,
+   "method": "scan",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 126,
+   "recall": 0.1349206349206349,
+   "method": "scan_noprior",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 161,
+   "recall": 0.5838509316770186,
+   "method": "scan_noprior",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 125,
+   "recall": 0.944,
+   "method": "scan_noprior",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 100,
+   "recall": 0.99,
+   "method": "scan_noprior",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 126,
+   "recall": 0.007936507936507936,
+   "method": "feature",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 161,
+   "recall": 0.21739130434782608,
+   "method": "feature",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 125,
+   "recall": 0.8,
+   "method": "feature",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 100,
+   "recall": 1.0,
+   "method": "feature",
+   "scenario": "metabolomics, low abundance"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 42,
+   "recall": 0.16666666666666666,
+   "method": "scan",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 102,
+   "recall": 0.5882352941176471,
+   "method": "scan",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 167,
+   "recall": 0.9281437125748503,
+   "method": "scan",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 278,
+   "recall": 1.0,
+   "method": "scan",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 42,
+   "recall": 0.21428571428571427,
+   "method": "scan_noprior",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 102,
+   "recall": 0.5686274509803921,
+   "method": "scan_noprior",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 167,
+   "recall": 0.8682634730538922,
+   "method": "scan_noprior",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 278,
+   "recall": 0.9568345323741008,
+   "method": "scan_noprior",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 42,
+   "recall": 0.0,
+   "method": "feature",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 102,
+   "recall": 0.27450980392156865,
+   "method": "feature",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 167,
+   "recall": 0.718562874251497,
+   "method": "feature",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 278,
+   "recall": 0.9892086330935251,
+   "method": "feature",
+   "scenario": "metabolomics"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 212,
+   "recall": 0.419811320754717,
+   "method": "scan",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 270,
+   "recall": 0.8555555555555555,
+   "method": "scan",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 281,
+   "recall": 0.9288256227758007,
+   "method": "scan",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 230,
+   "recall": 0.991304347826087,
+   "method": "scan",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 212,
+   "recall": 0.4339622641509434,
+   "method": "scan_noprior",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 270,
+   "recall": 0.7888888888888889,
+   "method": "scan_noprior",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 281,
+   "recall": 0.8932384341637011,
+   "method": "scan_noprior",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 230,
+   "recall": 0.9695652173913043,
+   "method": "scan_noprior",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "3-10",
+   "n": 212,
+   "recall": 0.05188679245283019,
+   "method": "feature",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "10-30",
+   "n": 270,
+   "recall": 0.6666666666666666,
+   "method": "feature",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": "30-100",
+   "n": 281,
+   "recall": 0.8896797153024911,
+   "method": "feature",
+   "scenario": "proteomics"
+  },
+  {
+   "snr_bin": ">100",
+   "n": 230,
+   "recall": 0.9956521739130435,
+   "method": "feature",
+   "scenario": "proteomics"
+  }
+ ],
+ "summary": [
+  {
+   "scenario": "metabolomics, low abundance",
+   "method": "scan",
+   "relation_precision_p09": 0.9476543209876543,
+   "relations_p09": 4050,
+   "group_purity": 0.9901234567901235,
+   "background_mixed": 0.013972055888223553,
+   "node_ari_eluting": 0.9073915619599745,
+   "node_ari_background": 0.016603078635532037,
+   "span_gt_3_widths": 0.003992015968063872,
+   "seconds": 0.9694452499970794
+  },
+  {
+   "scenario": "metabolomics, low abundance",
+   "method": "scan_noprior",
+   "relation_precision_p09": 0.9476543209876543,
+   "relations_p09": 4050,
+   "group_purity": 0.9291023441966838,
+   "background_mixed": 0.06827309236947791,
+   "node_ari_eluting": 0.8996252863515373,
+   "node_ari_background": 0.2836061932506552,
+   "span_gt_3_widths": 0.08835341365461848,
+   "seconds": 0.9694452499970794
+  },
+  {
+   "scenario": "metabolomics, low abundance",
+   "method": "feature",
+   "relation_precision_p09": 0.9963724304715841,
+   "relations_p09": 827,
+   "group_purity": 0.9975124378109452,
+   "background_mixed": 0.004219409282700422,
+   "node_ari_eluting": NaN,
+   "node_ari_background": NaN,
+   "span_gt_3_widths": NaN,
+   "seconds": 0.2028742500115186
+  },
+  {
+   "scenario": "metabolomics",
+   "method": "scan",
+   "relation_precision_p09": 0.9506497298875748,
+   "relations_p09": 6849,
+   "group_purity": 0.9874731567644953,
+   "background_mixed": 0.015060240963855422,
+   "node_ari_eluting": 0.9068707199179007,
+   "node_ari_background": 0.014031613377686818,
+   "span_gt_3_widths": 0.0,
+   "seconds": 1.1418394159991294
+  },
+  {
+   "scenario": "metabolomics",
+   "method": "scan_noprior",
+   "relation_precision_p09": 0.9506497298875748,
+   "relations_p09": 6849,
+   "group_purity": 0.9244579945799458,
+   "background_mixed": 0.055384615384615386,
+   "node_ari_eluting": 0.8626203331340722,
+   "node_ari_background": 0.24395353035443704,
+   "span_gt_3_widths": 0.07846153846153846,
+   "seconds": 1.1418394159991294
+  },
+  {
+   "scenario": "metabolomics",
+   "method": "feature",
+   "relation_precision_p09": 0.9909051537462105,
+   "relations_p09": 2309,
+   "group_purity": 0.990174672489083,
+   "background_mixed": 0.013921113689095127,
+   "node_ari_eluting": NaN,
+   "node_ari_background": NaN,
+   "span_gt_3_widths": NaN,
+   "seconds": 0.2694138760562055
+  },
+  {
+   "scenario": "proteomics",
+   "method": "scan",
+   "relation_precision_p09": 0.9726411446249034,
+   "relations_p09": 10344,
+   "group_purity": 0.986387943607195,
+   "background_mixed": 0.002372479240806643,
+   "node_ari_eluting": 0.9243995212595437,
+   "node_ari_background": 0.014005307595050583,
+   "span_gt_3_widths": 0.0011862396204033216,
+   "seconds": 1.4998759999871254
+  },
+  {
+   "scenario": "proteomics",
+   "method": "scan_noprior",
+   "relation_precision_p09": 0.9726411446249034,
+   "relations_p09": 10344,
+   "group_purity": 0.9315199236459079,
+   "background_mixed": 0.01139240506329114,
+   "node_ari_eluting": 0.8511133901069728,
+   "node_ari_background": 0.09972156855887498,
+   "span_gt_3_widths": 0.012658227848101266,
+   "seconds": 1.4998759999871254
+  },
+  {
+   "scenario": "proteomics",
+   "method": "feature",
+   "relation_precision_p09": 0.9981460882461994,
+   "relations_p09": 5394,
+   "group_purity": 0.9945522642151856,
+   "background_mixed": 0.0014903129657228018,
+   "node_ari_eluting": NaN,
+   "node_ari_background": NaN,
+   "span_gt_3_widths": NaN,
+   "seconds": 0.34775320801418275
+  }
+ ],
+ "real": [
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "centroids": 2422587,
+   "relation_segments": 430988,
+   "decoy_segments": 411008,
+   "relations_p09": 165672,
+   "bayes_fdr_09": 0.01931231944076876,
+   "decoy_fdr_09": 0.018163715123208777,
+   "graph_compounds": 6355,
+   "graph_compounds_no_prior": 2953,
+   "span_gt_3_widths": 0.034168157423971376,
+   "span_gt_3_widths_no_prior": 0.18585966791644348,
+   "relations_without_picked_peak": 0.5891520594910425,
+   "seconds": 20.661580666026566
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "centroids": 2605190,
+   "relation_segments": 2004994,
+   "decoy_segments": 3230779,
+   "relations_p09": 416255,
+   "bayes_fdr_09": 0.046197106992578486,
+   "decoy_fdr_09": 0.04597301297058185,
+   "graph_compounds": 18249,
+   "graph_compounds_no_prior": 11593,
+   "span_gt_3_widths": 0.007836045810729355,
+   "span_gt_3_widths_no_prior": 0.09661002328991633,
+   "relations_without_picked_peak": 0.2538443982654863,
+   "seconds": 69.44186316599371
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "centroids": 8026561,
+   "relation_segments": 4896242,
+   "decoy_segments": 7390638,
+   "relations_p09": 1859162,
+   "bayes_fdr_09": 0.03188096083096547,
+   "decoy_fdr_09": 0.027767610870562672,
+   "graph_compounds": 31571,
+   "graph_compounds_no_prior": 12119,
+   "span_gt_3_widths": 0.034182348096052716,
+   "span_gt_3_widths_no_prior": 0.10816612996449508,
+   "relations_without_picked_peak": 0.5015195017970462,
+   "seconds": 320.7939862080384
+  }
+ ],
+ "priors": [
+  {
+   "dataset": "synthetic: metabolomics, low abundance",
+   "sigma": 2.3068457103488536,
+   "fwhm": 5.43220651952314,
+   "tau": 0.023068457103488534,
+   "margin": 1.0,
+   "n_edges": 2450,
+   "inlier": 0.9954784424895163
+  },
+  {
+   "dataset": "synthetic: metabolomics",
+   "sigma": 2.393075066043703,
+   "fwhm": 5.635261134783475,
+   "tau": 0.023930750660437032,
+   "margin": 1.0,
+   "n_edges": 5125,
+   "inlier": 0.9956681407259284
+  },
+  {
+   "dataset": "synthetic: proteomics",
+   "sigma": 3.7066954622551718,
+   "fwhm": 8.72860077534374,
+   "tau": 0.03706695462255172,
+   "margin": 1.0,
+   "n_edges": 10060,
+   "inlier": 0.9963493417615967
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "sigma": 2.162150126653493,
+   "fwhm": 5.091474458609851,
+   "tau": 1.2158663674828063,
+   "margin": 1.0,
+   "n_edges": 33569,
+   "inlier": 0.9819164288219188
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "sigma": 1.7946533258058683,
+   "fwhm": 4.226085625489118,
+   "tau": 1.0092077294909394,
+   "margin": 1.0,
+   "n_edges": 174456,
+   "inlier": 0.9924424608010817
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "sigma": 2.19888861657782,
+   "fwhm": 5.177986991107824,
+   "tau": 1.7466393131615778,
+   "margin": 1.0,
+   "n_edges": 419428,
+   "inlier": 0.98543084546406
+  }
+ ],
+ "spans": [
+  {
+   "dataset": "synthetic: metabolomics, low abundance",
+   "without": 0.08835341365461848,
+   "with": 0.003992015968063872
+  },
+  {
+   "dataset": "synthetic: metabolomics",
+   "without": 0.07846153846153846,
+   "with": 0.0
+  },
+  {
+   "dataset": "synthetic: proteomics",
+   "without": 0.012658227848101266,
+   "with": 0.0011862396204033216
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "without": 0.18585966791644348,
+   "with": 0.034168157423971376
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "without": 0.09661002328991633,
+   "with": 0.007836045810729355
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "without": 0.10816612996449508,
+   "with": 0.034182348096052716
+  }
+ ]
+}

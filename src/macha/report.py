@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -99,7 +100,8 @@ class Page:
         self.nav = nav or []
 
     def section(self, title: str, text: str = ""):
-        self.blocks.append(f'<section><h2>{html.escape(title)}</h2>{text}</section>')
+        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        self.blocks.append(f'<section id="{slug}"><h2>{html.escape(title)}</h2>{text}</section>')
 
     def text(self, html_text: str):
         self.blocks.append(f'<div class="prose">{html_text}</div>')
