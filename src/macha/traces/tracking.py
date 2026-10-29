@@ -332,7 +332,7 @@ def trace_stats(label, order, offsets, scan, mz, intensity, ppm_a, ppm_b, ppm_c)
 
 @nb.njit(cache=True)
 def track_kf(mz, intensity, offsets, ppm_a, ppm_b, ppm_c, max_gap, gate, max_ppm, birth_cost,
-             gap_cost, int_sigma, int_cap, q_ppm, v0_ppm):
+             gap_cost, int_sigma, int_cap, q_ppm, v0_ppm, r_ppm):
     """Like :func:`track` but each trace is a constant-velocity Kalman filter.
 
     State is (m/z, drift per scan) with covariance P.  Prediction over ``ds``
@@ -340,7 +340,9 @@ def track_kf(mz, intensity, offsets, ppm_a, ppm_b, ppm_c, max_gap, gate, max_ppm
     spectral density ``(q_ppm * 1e-6 * mz)^2`` per scan^3; a new trace starts
     with zero drift and prior sd ``v0_ppm`` ppm/scan.  Gating and costs use
     the innovation variance, so traces follow steady drift without widening
-    the m/z window that keeps neighbouring ions apart.
+    the m/z window that keeps neighbouring ions apart.  ``r_ppm`` adds a
+    per-scan position random walk (as in the level model) so a long trace's
+    m/z uncertainty never collapses below unmodelled jitter.
     """
     n = mz.shape[0]
     n_scans = offsets.shape[0] - 1
@@ -400,7 +402,7 @@ def track_kf(mz, intensity, offsets, ppm_a, ppm_b, ppm_c, max_gap, gate, max_ppm
                 t = active[j]
                 ds = s - last_scan[t]
                 q = (q_ppm * 1e-6 * x) ** 2
-                s00 = p00[t] + 2 * ds * p01[t] + ds * ds * p11[t] + q * ds ** 3 / 3.0
+                s00 = p00[t] + 2 * ds * p01[t] + ds * ds * p11[t] + q * ds ** 3 / 3.0 + (r_ppm * 1e-6 * x) ** 2 * ds
                 var = s00 + vp
                 d = x - pred[j]
                 d2 = d * d / var
@@ -437,7 +439,7 @@ def track_kf(mz, intensity, offsets, ppm_a, ppm_b, ppm_c, max_gap, gate, max_ppm
                 t = active[match[ip]]
                 ds = s - last_scan[t]
                 q = (q_ppm * 1e-6 * x) ** 2
-                a00 = p00[t] + 2 * ds * p01[t] + ds * ds * p11[t] + q * ds ** 3 / 3.0
+                a00 = p00[t] + 2 * ds * p01[t] + ds * ds * p11[t] + q * ds ** 3 / 3.0 + (r_ppm * 1e-6 * x) ** 2 * ds
                 a01 = p01[t] + ds * p11[t] + q * ds * ds / 2.0
                 a11 = p11[t] + q * ds
                 mp = m[t] + v[t] * ds
@@ -485,7 +487,7 @@ def track_kf(mz, intensity, offsets, ppm_a, ppm_b, ppm_c, max_gap, gate, max_ppm
 
 
 @nb.njit(cache=True)
-def kf_loglik(order, offs, scan, mz, intensity, ppm_a, ppm_b, ppm_c, q_ppm, v0_ppm, cap):
+def kf_loglik(order, offs, scan, mz, intensity, ppm_a, ppm_b, ppm_c, q_ppm, v0_ppm, cap, r_ppm=0.0):
     """Innovation log-likelihood of traces under a constant-velocity model (per-point terms capped)."""
     total = 0.0
     count = 0
@@ -507,7 +509,7 @@ def kf_loglik(order, offs, scan, mz, intensity, ppm_a, ppm_b, ppm_c, q_ppm, v0_p
             x = mz[i]
             ds = scan[i] - last
             q = (q_ppm * 1e-6 * x) ** 2
-            a00 = p00_ + 2 * ds * p01_ + ds * ds * p11_ + q * ds ** 3 / 3.0
+            a00 = p00_ + 2 * ds * p01_ + ds * ds * p11_ + q * ds ** 3 / 3.0 + (r_ppm * 1e-6 * x) ** 2 * ds
             a01 = p01_ + ds * p11_ + q * ds * ds / 2.0
             a11 = p11_ + q * ds
             mp = m_ + v_ * ds

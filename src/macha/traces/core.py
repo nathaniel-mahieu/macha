@@ -87,7 +87,8 @@ class TrackParams:
     intensity_cap: float = 3.0
     motion: str = "velocity"  # "velocity": constant-velocity Kalman per trace; "level": forgetting mean
     q_ppm: float | None = None  # velocity model: acceleration noise (ppm per scan^1.5); learned if None
-    v0_ppm: float = 0.2  # velocity model: prior sd of a new trace's drift, ppm per scan
+    v0_ppm: float = 0.03  # velocity model: prior sd of a new trace's drift, ppm per scan
+    r_ppm: float = 0.15  # velocity model: per-scan position random walk (floor on m/z uncertainty)
     q_init: float = 0.05  # velocity model: generous first-pass value before calibration
     forget: float = 0.97  # level model: per-scan decay of a trace's m/z memory
     drift_ppm: float = 0.15  # level model: per-scan random-walk allowance for a trace's m/z
@@ -235,17 +236,18 @@ def _track_once(run: MSRun, p: TrackParams, pm: PrecisionModel, q: float | None 
     it = run.intensity.astype(np.float64)
     if p.motion == "velocity":
         return track_kf(run.mz, it, run.offsets, pm.a, pm.b, pm.c, p.max_gap, p.gate, p.max_ppm, p.birth_cost,
-                        p.gap_cost, p.intensity_sigma, p.intensity_cap, p.q_init if q is None else q, p.v0_ppm)
+                        p.gap_cost, p.intensity_sigma, p.intensity_cap, p.q_init if q is None else q, p.v0_ppm,
+                        p.r_ppm)
     return track(run.mz, it, run.offsets, pm.a, pm.b, pm.c, p.max_gap, p.gate, p.max_ppm, p.birth_cost,
                  p.gap_cost, p.intensity_sigma, p.intensity_cap, p.forget, p.drift_ppm)
 
 
-def fit_motion(run: MSRun, label: np.ndarray, pm: PrecisionModel, v0_ppm: float = 0.2,
+def fit_motion(run: MSRun, label: np.ndarray, pm: PrecisionModel, v0_ppm: float = 0.03, r_ppm: float = 0.15,
                grid=(0.0, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.4)) -> tuple[float, list]:
     """Acceleration noise maximising the (capped) innovation likelihood of the given traces."""
     order, offs = csr_from_labels(label)
     it = run.intensity.astype(np.float64)
-    lls = [kf_loglik(order, offs, run.scan_of_point, run.mz, it, pm.a, pm.b, pm.c, q, v0_ppm, 12.5)[0]
+    lls = [kf_loglik(order, offs, run.scan_of_point, run.mz, it, pm.a, pm.b, pm.c, q, v0_ppm, 12.5, r_ppm)[0]
            for q in grid]
     return float(grid[int(np.argmax(lls))]), lls
 
@@ -297,7 +299,7 @@ def detect_traces(run: MSRun, params: TrackParams | None = None, **overrides) ->
         if p.precision is None:
             pm = PrecisionModel.fit_from_traces(run, good, start=pm)
         if p.motion == "velocity" and p.q_ppm is None:
-            q, _ = fit_motion(run, good, pm, p.v0_ppm)
+            q, _ = fit_motion(run, good, pm, p.v0_ppm, p.r_ppm)
         label = _track_once(run, p, pm, q)
         timings["calibrate_track_pass2"] = time.perf_counter() - t1
     if p.motion == "velocity":
