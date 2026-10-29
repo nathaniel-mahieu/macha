@@ -1,2 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^src$
+^tests$
+^benchmarks$
+^scripts$
+^reports$
+^pyproject\.toml$
+^PYTHON_README\.md$
+^\.venv$

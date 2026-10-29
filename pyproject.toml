@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "macha"
+version = "0.2.0"
+description = "Modular LC-MS feature detection: trace tracking, baselines, peaks, Bayesian isotope/adduct graphs and drift-trend alignment."
+readme = "PYTHON_README.md"
+requires-python = ">=3.11"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Nathaniel Mahieu" }]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "numba>=0.60",
+    "pandas>=2.1",
+]
+
+[project.optional-dependencies]
+report = ["plotly>=5.20"]
+dev = ["pytest>=8", "hypothesis>=6.100", "plotly>=5.20", "pytest-timeout>=2.3"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/macha"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "realdata: tests that need downloaded public Astral data (run scripts/fetch_data.py first)",
+    "slow: longer-running integration tests",
+]
+addopts = "-ra"
