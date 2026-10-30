@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 
 from ..run import MSRun
+from .dia import DIARun, read_dia
 from .mzml import read_mzml
 
 
@@ -32,6 +33,15 @@ def fetch_ms1(url: str, retries: int = 6, backoff: float = 30.0, verbose: bool =
 
     Retries with linear backoff on HTTP 429/5xx (MassIVE rate limits).
     """
+    return _fetch(url, read_mzml, retries, backoff, verbose, **read_kwargs)
+
+
+def fetch_dia(url: str, retries: int = 6, backoff: float = 30.0, verbose: bool = True, **read_kwargs) -> DIARun:
+    """Stream a DIA mzML and keep MS1 plus the MS2 centroids of every isolation window."""
+    return _fetch(url, read_dia, retries, backoff, verbose, **read_kwargs)
+
+
+def _fetch(url, reader, retries, backoff, verbose, **read_kwargs):
     last = None
     for attempt in range(retries):
         try:
@@ -48,7 +58,7 @@ def fetch_ms1(url: str, retries: int = 6, backoff: float = 30.0, verbose: bool =
                         rate = mb / max(time.time() - t0, 1e-6)
                         print(f"\r  {n_spectra:>7} spectra  {mb:8.1f}{tot} MB  {rate:5.1f} MB/s", end="", file=sys.stderr)
 
-                run = read_mzml(io.BufferedReader(counter, buffer_size=1 << 20), on_progress=progress, **read_kwargs)
+                run = reader(io.BufferedReader(counter, buffer_size=1 << 20), on_progress=progress, **read_kwargs)
                 if verbose:
                     print(file=sys.stderr)
                 run.meta.update(url=url, bytes_streamed=counter.n)

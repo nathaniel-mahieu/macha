@@ -8,15 +8,19 @@ numba, and benchmarked against ground truth and public Orbitrap Astral data.
 ```
 src/macha/
   run.py          MSRun: CSR container for centroided MS1 data (+ stitch_scans for multi-range cycles)
-  io/             streaming mzML reader/writer (local, .gz, HTTP; MS-Numpress), fetch_ms1
+  io/             streaming mzML reader/writer (local, .gz, HTTP; MS-Numpress), fetch_ms1;
+                  dia.py: DIA as MS1 + one MS2 time series per isolation window, fetch_dia
   synth/          ground-truth simulator: fine-structure isotopes, adducts, EMG elution, Orbitrap-like
-                  coalescence / precision / censoring, multi-run batches with class-specific drift
+                  coalescence / precision / censoring, multi-run batches with class-specific drift;
+                  dia.py: DIA windows with b / y fragment ladders, co-isolation and fragment truth
   traces/         ROI detection by multi-target tracking (LAP + self-calibrated precision model);
                   noise.py: interference and noise level in each ROI's own m/z window
   baseline.py     censoring-aware asymmetric Whittaker baselines, detection floor, noise
   peaks.py        persistence peak detection, feature table with m/z standard errors, EMG mixture fits
   annotate/       modulo mass-difference graph + decoy-calibrated Bayesian edges + MAP graph partition;
-                  scan_graph: the same graph built from centroids scan by scan, before peak detection
+                  scan_graph: the same graph built from centroids scan by scan, before peak detection;
+                  ladders / coelution / complements / fragment_groups: DIA fragment grouping
+  search.py       tryptic digest, per-window fragment index, binomial scoring, peptide-level target-decoy FDR
   align/          drift-trend mixture model + probabilistic correspondence (+ DTW, references);
                   edges.py: anchors from scan-graph relations, so drift is learned before peak detection
   pipeline.py     process_run / process_batch convenience wrappers
@@ -82,6 +86,18 @@ rels = [relation_table(g, tr) for g, tr in zip(graphs, traces)]      # one per r
 A, table, members = relation_anchors(rels, noise=[relation_noise(r, tr) for r, tr in zip(rels, traces)])
 model, cv = cv_drift(A.rt, A.se)    # K and smoothing chosen by blocked cross-validation
 al = align(tables, anchors=A, K=model.K, lam=cv.loc[cv.rmse.idxmin(), "lam"])   # optional: match features
+# DIA: every isolation window is an LC-MS run of fragments; group them into pseudo-spectra and search
+from macha.io import read_dia
+from macha.annotate.fragment_groups import fragment_groups, ms1_precursors, precursor_groups
+from macha.search import digest, read_fasta, with_decoys, WindowIndex, search_groups, peptide_fdr
+d = read_dia("run.mzML.gz")                     # d.ms1, d.windows, d.ms2[w]
+tr = detect_traces(d.ms2[w])
+fg = fragment_groups(tr, (d.windows.lo[w], d.windows.hi[w]))   # residue ladders seed, co-elution grows
+fg.groups                                       # ladder steps, longest tag, complement precursor mass
+db = with_decoys(digest(read_fasta("human.fasta.gz")))
+hits = search_groups(WindowIndex.build(db, (d.windows.lo[w], d.windows.hi[w])), db,
+                     [tr.table.mz.to_numpy()[m] for m in fg.members])
+peptide_fdr(hits, 0.01)
 ```
 
 Every step is a plain function on plain data. Run `detect_traces`, `trace_baselines`, `detect_peaks`,
@@ -147,6 +163,8 @@ exists. Full tables are in `reports/*.html` and `reports/*.json`.
 | annotation | edge precision 0.987–0.993, compound ARI 0.95–0.97 (3 of 4 sets); at matched precision the posterior ranking out-recalls rule + RT on every set | rule + RT ARI 0.87–0.97 |
 | scan graph | compounds found at SNR 10-30: 59-60 % vs 22-28 % for the feature graph (metabolomics), 86 % vs 67 % (proteomics); at SNR 3-10 in proteomics 42 % vs 5 % | group purity 0.99 (0.93 without the elution-time prior) vs 0.99-1.00 for the feature graph |
 | scan graph (real) | 2.4M centroids in 22 s; Bayesian vs decoy FDR at posterior ≥ 0.9: 1.9 % vs 1.8 % (metabolomics), 4.6 % vs 4.6 % (250 pg); 25-59 % of confident relations have no picked peak; compounds whose members span > 3 learned peak widths: 3.4 % / 0.8 % / 3.4 % | 18.6 % / 9.7 % / 10.8 % without the elution-time prior |
+| DIA grouping (synthetic) | peptides at 1 % FDR, same search for every grouping (2 / 20 Th windows): MS1-anchored + ladder rescue 4114 / 3462, MS1-anchored 3963 / 3473, ladder-seeded 2384 / 1717; measured FDR 0.7-1.4 % | co-elution only 2601 / 1444, ladder graph alone 228 / 5 |
+| DIA grouping (real) | Astral 250 pg, 4 of 20 windows: MS1-anchored + ladder rescue 438, MS1-anchored 423, ladder-seeded 318 (51 found by no other grouping) | co-elution only 229 |
 | annotation (real) | Bayesian vs decoy FDR at posterior ≥ 0.9: 1.6 % vs 1.6 % (250 pg), 2.3 % vs 1.8 % (50 ng), 2.7 % vs 0.5 % (metabolomics, conservative) | — |
 | alignment | three drift trends, strong: F1 0.973, aligned RT spread 1.17 s | global warp 0.951 / 4.91 s, uncorrected 0.948 / 5.70 s, BPC-DTW 0.941 / 6.80 s, density 0.886 |
 | alignment (real) | 850k features from 6 Astral runs in ~90 s; tighter anchor fit than a global warp (σ 0.32 vs 0.47 s) | isotope consistency equal to a global warp |
@@ -195,6 +213,17 @@ node's signal must lie within one learned peak width of the relation that links 
 log share of each node's signal it explains. Second, member signal centres scatter around a shared centre by a
 learned τ plus their own standard error, which adds a Ward penalty inside GAEC. Peaks near the noise floor need
 not apex together; their centres are simply less precise.
+
+**DIA fragments.** A DIA isolation window visited once per cycle is an LC-MS run of fragment ions, so trace
+detection and the scan-level graph apply unchanged, with amino-acid residue steps as the modulo rules. Residue
+decoys need care: fragments of unrelated peptides also differ by peptide-like masses, so decoys shifted off the
+mass-defect line (the MS1 scheme) would be hit too rarely. They are placed on the line, more than 0.02 Da from
+every residue, residue pair, isotope or loss step, keeping each residue's offset from the line. Persistence does
+not separate ladder steps from coincidences here: every fragment of a precursor co-elutes. Ladder components are
+therefore near-pure but sparse, with one component per ion series. They work best as seeds: merged when their summed chromatograms
+match, then grown by the fragments that follow them. Complementary pairs (b<sub>i</sub> + y<sub>L-i</sub> = M + 2H⁺)
+give a precursor mass without MS1. `benchmarks/bench_dia.py` scores every grouping with one database search
+(`macha.search`) at 1 % peptide-level FDR.
 
 **Alignment.** Per-m/z-channel DTW (warpgroup/warpcombine) and a single global curve (`grtgmzcor`) are replaced
 by a **drift-trend mixture**: each compound belongs to a latent class whose P-spline warp is shared by all its
@@ -267,4 +296,10 @@ Relations are matched across runs by chain clustering on rule, anchor m/z, partn
   comes from coincidental relations between ions that truly co-elute. Next: negative evidence between co-eluting
   blocks with inconsistent intensity ratios, a one-envelope-per-block constraint, and a reverse (heavy-anchored)
   search so relations whose lighter ion never forms a trace are found too.
-- Profile-mode data must be centroided first. MS2 is not used.
+- DIA: ladder relations stay clean in narrow windows but get muddled in wide windows of dense samples (20 Th: ~70 %
+  of confident residue steps are real, and the decoys under-estimate the rest), and ladder components alone are too
+  sparse to identify peptides. As seeds without MS1 they beat co-elution-only grouping where windows are crowded,
+  and as a rescue next to MS1-anchored grouping they add ~3-4 %. The search (`macha.search`) is a deliberately
+  simple binomial scorer with no library, intensity or retention-time prediction, so absolute identification
+  numbers are far below DIA-NN-class tools.
+- Profile-mode data must be centroided first. MS2 is used only for DIA fragment grouping.

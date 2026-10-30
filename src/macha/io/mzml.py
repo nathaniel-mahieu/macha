@@ -37,6 +37,7 @@ NUMPRESS = {
     "MS:1002746": ("linear", True), "MS:1002747": ("pic", True), "MS:1002748": ("slof", True),
 }
 WIN_LO, WIN_HI = "MS:1000501", "MS:1000500"
+ISO_TARGET, ISO_LO, ISO_HI = "MS:1000827", "MS:1000828", "MS:1000829"
 FILTER = "MS:1000512"
 
 
@@ -83,8 +84,9 @@ def iter_spectra(stream: BinaryIO, ms_levels=(1,), on_progress: Callable | None 
     """Yield dicts for each spectrum whose MS level is in ``ms_levels``.
 
     Each dict has ``rt`` (seconds), ``mz``, ``intensity``, ``polarity``,
-    ``centroid``, ``index``, ``id`` and optional ``window`` (lo, hi) and
-    ``filter`` (Thermo filter string).
+    ``centroid``, ``index``, ``id`` and optional ``window`` (scan range lo, hi),
+    ``isolation`` (precursor isolation window lo, hi; MSn only) and ``filter``
+    (Thermo filter string).
     """
     container = None
     n_seen = 0
@@ -98,6 +100,7 @@ def iter_spectra(stream: BinaryIO, ms_levels=(1,), on_progress: Callable | None 
         n_seen += 1
         level, rt, pol, cent = None, None, 0, None
         lo = hi = None
+        iso_t = iso_lo = iso_hi = None
         filt = None
         arrays = {}
         for node in elem.iter():
@@ -126,6 +129,12 @@ def iter_spectra(stream: BinaryIO, ms_levels=(1,), on_progress: Callable | None 
                     hi = float(node.get("value"))
                 elif acc == FILTER:
                     filt = node.get("value")
+                elif acc == ISO_TARGET:
+                    iso_t = float(node.get("value"))
+                elif acc == ISO_LO:
+                    iso_lo = float(node.get("value"))
+                elif acc == ISO_HI:
+                    iso_hi = float(node.get("value"))
             elif t == "binaryDataArray":
                 k, arr = _decode_array(node)
                 if k is not None:
@@ -135,7 +144,8 @@ def iter_spectra(stream: BinaryIO, ms_levels=(1,), on_progress: Callable | None 
             it = arrays.get("intensity", np.empty(0))
             yield dict(index=int(elem.get("index", n_seen - 1)), id=elem.get("id"), level=level,
                        rt=rt, polarity=pol, centroid=cent, mz=mz, intensity=it,
-                       window=(lo, hi) if lo is not None else None, filter=filt)
+                       window=(lo, hi) if lo is not None else None, filter=filt,
+                       isolation=(iso_t - (iso_lo or 0.0), iso_t + (iso_hi or 0.0)) if iso_t is not None else None)
         if on_progress is not None and n_seen % 2000 == 0:
             on_progress(n_seen)
         elem.clear()

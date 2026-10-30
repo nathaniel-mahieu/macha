@@ -16,7 +16,7 @@ from common import NAV, REPORTS
 from macha.report import Page
 
 MODULES = ["bench_io", "bench_traces", "bench_baseline", "bench_peaks", "bench_annotate", "bench_scan_graph",
-           "bench_align", "bench_xrun"]
+           "bench_dia", "bench_align", "bench_xrun"]
 
 
 def load(name):
@@ -43,6 +43,14 @@ def index():
         r = r[r.scenario == "metabolomics, low abundance"].set_index(["method", "snr_bin"]).recall
         tiles.append(("Scan graph: compounds found, SNR 10-30", f"{r[('scan', '10-30')]:.0%}",
                       f"feature-level graph {r[('feature', '10-30')]:.0%} (low-abundance metabolomics)"))
+    dia = load("dia")
+    if dia:
+        d = pd.DataFrame(dia["summary"])
+        d = d[d.dataset.str.startswith("Astral")].set_index("approach")
+        if len(d):
+            best = d.peptides_1pct.idxmax()
+            tiles.append(("DIA 250 pg: peptides at 1 % FDR", f"{int(d.peptides_1pct.max())}",
+                          f"{best}; co-elution only {int(d.loc['co-elution only', 'peptides_1pct'])}"))
     bl = load("baseline")
     if bl:
         b = pd.DataFrame(bl)
@@ -96,6 +104,9 @@ partitioning into compounds (extends mz.unity).</li>
 scan with ±1 scan bridging; relations aggregated over time, decoy-calibrated, triangle-supported, and partitioned
 into compounds in graph space before any peak detection, under an elution-time prior learned from the run's peak
 width.</li>
+<li><a href="dia.html"><b>DIA fragment grouping</b></a>: isolation windows as fragment LC-MS runs; residue-ladder
+scan graph, ladder-seeded vs co-elution vs MS1-anchored pseudo-spectra, scored by one database search
+(<code>macha.search</code>) at 1 % FDR.</li>
 <li><a href="align.html"><b>macha.align</b></a>: drift-trend mixture model of retention-time warps with
 probabilistic, one-per-run correspondence and membership probabilities (replaces grtgmzcor / warpgroup /
 warpcombine DTW).</li>

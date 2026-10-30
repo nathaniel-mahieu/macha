@@ -284,7 +284,7 @@ def _segments(key_order, keys, anchor_scan, partner_scan, anchor_label, partner_
 # ------------------------------------------------------------------------------------------------ model
 FEATURES = ["log_n", "coverage", "abs_u", "log_chi2", "partner_frac", "ratio_mad", "rho_z", "bridged", "iso_dev",
             "has_iso", "is_isotope", "is_pair", "z2plus", "orphan", "rho_z*log_n", "ratio_mad*log_n", "log_tri",
-            "log_tri*log_n"]
+            "log_tri*log_n", "is_residue", "log_chain"]
 
 
 def _design(seg: pd.DataFrame) -> np.ndarray:
@@ -292,13 +292,14 @@ def _design(seg: pd.DataFrame) -> np.ndarray:
     rho_z = np.arctanh(np.clip(seg["rho"].fillna(0).to_numpy(), -0.99, 0.99))
     rmad = np.minimum(seg["ratio_mad"].to_numpy(), 3)
     tri = np.log1p(seg["tri"].to_numpy(float)) if "tri" in seg else np.zeros(len(seg))
+    chain = np.log1p(seg["chain"].to_numpy(float)) if "chain" in seg else np.zeros(len(seg))
     X = np.column_stack([
         log_n, seg["coverage"].clip(0, 1), np.minimum(np.abs(seg["u"]), 30),
         np.log(np.maximum(seg["chi2"], 1e-3)), seg["partner_frac"], rmad, rho_z, seg["bridged"],
         np.minimum(np.abs(seg["iso_dev"].fillna(0)), 5), seg["iso_dev"].notna().astype(float),
         (seg["kind"] == "isotope").astype(float), (seg["kind"] == "pair").astype(float),
         (seg["z"] >= 2).astype(float), (seg["partner"] < 0).astype(float), rho_z * log_n, rmad * log_n, tri,
-        tri * log_n])
+        tri * log_n, (seg["kind"] == "residue").astype(float), chain])
     return X
 
 
@@ -319,12 +320,8 @@ def _node_ids(B: pd.DataFrame, trace, s0, start: int, pad: int = 3):
     return out
 
 
-def triangle_support(targets: pd.DataFrame, decoys: pd.DataFrame, p_min: float = 0.5):
-    """For every edge, the number of third nodes confidently related to both of its ends.
-
-    Real relations sit in dense structures (M, M+1, M+2, adducts and their isotopes); a coincidental edge
-    rarely closes a triangle.  The provisional graph uses targets with posterior >= ``p_min``.
-    """
+def _provisional_ends(targets: pd.DataFrame, decoys: pd.DataFrame) -> dict:
+    """Node ids of both ends of every target / decoy segment in the provisional graph (blocks of targets)."""
     B = _blocks(targets[targets.posterior >= 0.05], 0)
     nxt = len(B)
     ends = {}
@@ -334,6 +331,16 @@ def triangle_support(targets: pd.DataFrame, decoys: pd.DataFrame, p_min: float =
         b = _node_ids(B, d["partner"], d["s0"], nxt)
         nxt += len(d)
         ends[name] = (a, b)
+    return ends
+
+
+def triangle_support(targets: pd.DataFrame, decoys: pd.DataFrame, p_min: float = 0.5, ends: dict | None = None):
+    """For every edge, the number of third nodes confidently related to both of its ends.
+
+    Real relations sit in dense structures (M, M+1, M+2, adducts and their isotopes); a coincidental edge
+    rarely closes a triangle.  The provisional graph uses targets with posterior >= ``p_min``.
+    """
+    ends = ends or _provisional_ends(targets, decoys)
     ta, tb = ends["t"]
     conf = targets["posterior"].to_numpy() >= p_min
     nbrs: dict = {}
@@ -351,6 +358,36 @@ def triangle_support(targets: pd.DataFrame, decoys: pd.DataFrame, p_min: float =
                 tri[k] = len(nx & ny)
         out[name] = tri
     return out["t"], out["d"]
+
+
+def chain_support(targets: pd.DataFrame, decoys: pd.DataFrame, p_min: float = 0.5, cap: int = 3,
+                  ends: dict | None = None):
+    """For residue relations: confident residue steps continuing the chain on either side.
+
+    A fragment ladder is a chain b_(i-1) -> b_i -> b_(i+1) of residue steps (partner = anchor + residue / z),
+    so a real step usually has a confident step into its lighter end and out of its heavier end; a
+    coincidental mass difference rarely does.  Counts are capped per side so hub fragments do not dominate.
+    Non-residue relations get 0.
+    """
+    ends = ends or _provisional_ends(targets, decoys)
+    ta, tb = ends["t"]
+    conf = (targets["posterior"].to_numpy() >= p_min) & (targets["kind"].to_numpy() == "residue")
+    into: dict = {}
+    out_of: dict = {}
+    for x, y in zip(ta[conf].tolist(), tb[conf].tolist()):
+        if x != y:
+            into.setdefault(y, set()).add(x)
+            out_of.setdefault(x, set()).add(y)
+    res = {}
+    for name, d in (("t", targets), ("d", decoys)):
+        a, b = ends[name]
+        is_res = d["kind"].to_numpy() == "residue"
+        c = np.zeros(a.size, np.int64)
+        for k in np.flatnonzero(is_res):
+            x, y = int(a[k]), int(b[k])
+            c[k] = min(len(into.get(x, ())), cap) + min(len(out_of.get(y, ())), cap)
+        res[name] = c
+    return res["t"], res["d"]
 
 
 @dataclass
@@ -626,12 +663,17 @@ def repartition(g: ScanGraph, run, time_prior: bool = True, p_merge: float = 0.9
 def scan_graph(traces, polarity: int = 1, peptides: bool = False, rules=None, pair_rules=None, gate: float = 4.0,
                sys_ppm: float = 0.3, bridge: int = 1, max_gap: int = 2, min_support: int = 3,
                min_trace_points: int = 5, n_decoys: int = 3, min_posterior: float = 0.5,
-               p_merge: float = 0.9, time_prior: bool = True, bulk_margin: float = 1.0) -> ScanGraph:
+               p_merge: float = 0.9, time_prior: bool = True, bulk_margin: float = 1.0,
+               decoys: tuple | None = None, support: tuple = ("triangle", "chain")) -> ScanGraph:
     """Build, score and partition the scan-level modulo graph of a :class:`~macha.traces.Traces`.
 
     With ``time_prior`` the partition expects a compound's members to elute together: the bulk of each
     node's signal must lie within ``bulk_margin`` peak widths (learned from the run) of the relation joining
     it, and member signal centres must agree within a learned scatter (see :class:`TimePrior`).
+
+    ``decoys`` = (decoy rules, decoy pair rules) replaces the default shifted decoys, e.g. the defect-matched
+    residue decoys of :mod:`macha.annotate.ladders` for fragment ladders.  ``support`` lists the
+    second-pass graph features (triangle closure, residue-ladder chains); an empty tuple skips the second pass.
     """
     t0 = time.perf_counter()
     run = traces.run
@@ -640,7 +682,7 @@ def scan_graph(traces, polarity: int = 1, peptides: bool = False, rules=None, pa
         r0, p0 = default_rules(polarity, peptides)
         rules = rules if rules is not None else r0
         pair_rules = pair_rules if pair_rules is not None else p0
-    drules, dprules = make_decoys(rules, pair_rules, n_decoys)
+    drules, dprules = decoys if decoys is not None else make_decoys(rules, pair_rules, n_decoys)
     T = build_targets(rules + drules, pair_rules + dprules)
     label = traces.label
     ok = label >= 0
@@ -690,14 +732,19 @@ def scan_graph(traces, polarity: int = 1, peptides: bool = False, rules=None, pa
     targets = seg[~seg["decoy"].astype(bool)].reset_index(drop=True)
     decoys = seg[seg["decoy"].astype(bool)].reset_index(drop=True)
     k = max(int(T.decoy.sum()), 1) / max(int((~T.decoy.astype(bool)).sum()), 1)
-    # pass 1: local evidence only; pass 2: add triangle support from the provisional graph
+    # pass 1: local evidence only; pass 2: add triangle and ladder-chain support from the provisional graph
     for d in (targets, decoys):
         d["tri"] = 0
+        d["chain"] = 0
     model = fit_segment_model(targets, decoys, k)
     for d in (targets, decoys):
         d["posterior"] = model.posterior(d) if len(d) else []
-    if len(targets) and len(decoys):
-        targets["tri"], decoys["tri"] = triangle_support(targets, decoys)
+    if len(targets) and len(decoys) and support:
+        ends = _provisional_ends(targets, decoys)
+        if "triangle" in support:
+            targets["tri"], decoys["tri"] = triangle_support(targets, decoys, ends=ends)
+        if "chain" in support:
+            targets["chain"], decoys["chain"] = chain_support(targets, decoys, ends=ends)
         model = fit_segment_model(targets, decoys, k)
     for d in (targets, decoys):
         d["posterior"] = model.posterior(d) if len(d) else []

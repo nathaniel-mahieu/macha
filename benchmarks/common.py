@@ -29,8 +29,8 @@ ASTRAL = ROOT / "data" / "astral"
 
 NAV = [("Index", "index.html"), ("I/O & runs", "io.html"), ("Traces", "traces.html"),
        ("Baseline", "baseline.html"), ("Peaks", "peaks.html"), ("Annotation graph", "annotate.html"),
-       ("Scan graph", "scan_graph.html"), ("Alignment", "align.html"),
-       ("Cross-run graph", "xrun.html")]
+       ("Scan graph", "scan_graph.html"), ("DIA grouping", "dia.html"),
+       ("Alignment", "align.html"), ("Cross-run graph", "xrun.html")]
 
 SYNTHETIC = {
     "syn-metabolomics": dict(make=lambda: make_run(metabolomics_scenario(), seed=1),
