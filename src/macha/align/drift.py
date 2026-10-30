@@ -101,17 +101,18 @@ def _fit_em(T, K, knots, degree, lam, n_iter, init_resp, outlier_width, seed, to
     prev = -np.inf
     for it in range(n_iter):
         B = design(mu, knots, degree)
-        # M-step: warps per class and sample
+        # M-step: warps per class and sample.  A ridge (scale-aware, tiny where data exist) pulls each class warp
+        # towards the run's class-weighted mean warp: where a class has no members it follows the other classes
+        # (global drift is shared) instead of extrapolating a trend or falling back to no drift at all
+        mean_beta = np.einsum("k,kjb->jb", pi, beta)
         for k in range(K):
             for j in range(J):
                 m = obs[:, j]
                 w = resp[m, k] * (1 - out_p[m, j]) / (sigma**2 + S2[m, j])
                 Bm = B[m]
-                # ridge (scale-aware, tiny where data exist) keeps warps near zero where a class has no
-                # members instead of letting the difference penalty extrapolate a linear trend
                 ridge = 1e-2 * (np.median(w) if w.size else 1.0)
                 A = Bm.T @ (Bm * w[:, None]) + lam * P + (ridge + 1e-8) * np.eye(nb)
-                rhs = Bm.T @ (w * (T[m, j] - mu[m]))
+                rhs = Bm.T @ (w * (T[m, j] - mu[m])) + ridge * mean_beta[j]
                 beta[k, j] = np.linalg.solve(A, rhs)
             beta[k] -= beta[k].mean(0, keepdims=True)
         W = np.einsum("kjb,cb->ckj", beta, B)  # (C, K, J)
@@ -135,9 +136,17 @@ def _fit_em(T, K, knots, degree, lam, n_iter, init_resp, outlier_width, seed, to
         pout = np.exp(lout - lobs)
         out_p = np.einsum("ck,ckj->cj", resp, pout) * obs
         win = np.einsum("ck,ckj->cj", resp, 1 - pout) * obs
-        r2 = np.einsum("ck,ckj->cj", resp, (1 - pout) * R**2) - win * S2
-        sigma = float(np.sqrt(max(r2.sum() / max(win.sum(), 1e-9), 0.0)))
-        sigma = max(sigma, sigma_floor)
+        r2 = np.einsum("ck,ckj->cj", resp, (1 - pout) * R**2) * obs
+        # noise scale by Fisher scoring on the inlier likelihood with variances sigma^2 + S^2: the moment estimate
+        # sum(r^2 - S^2) / n goes negative (and pins sigma to its floor) when a few anchors carry a large S
+        s2 = sigma**2
+        for _ in range(30):
+            V = s2 + S2
+            step = float(((r2 - win * V) / V**2).sum() / max((win / V**2).sum(), 1e-12))
+            s2 = max(s2 + step, sigma_floor**2)
+            if abs(step) < 1e-6 * s2:
+                break
+        sigma = float(np.sqrt(s2))
         eps = float(np.clip(out_p.sum() / max(obs.sum(), 1), 1e-4, 0.3))
         pi = np.clip(resp.mean(0), 1e-6, None)
         pi /= pi.sum()
@@ -247,3 +256,54 @@ def select_drift(T: np.ndarray, K_max: int = 4, **kw) -> tuple[DriftModel, list[
         fits.append(fit_drift(T, K, init_resps=extra, **kw))
     best = min(fits, key=lambda m: m.bic)
     return best, fits
+
+
+def cv_drift(T: np.ndarray, S: np.ndarray | None = None, K_max: int = 4, lams=(0.03, 0.3, 3.0), n_folds: int = 4,
+             block: float = 10.0, seed: int = 0, max_anchors: int = 8000, **kw):
+    """Choose the number of classes and the smoothing penalty by blocked cross-validation; refit on all anchors.
+
+    The penalty is not scale-free: the data term grows with the number of anchors and their precision, so a fixed
+    ``lam`` over-smooths a small anchor set and under-smooths a large one, and BIC over-counts anchors that are
+    not independent (several ions of one compound share its RT error).  Anchors are assigned to RT blocks of
+    ``block`` seconds (co-eluting siblings stay together) and blocks to folds; each held-out anchor's RT in every
+    run is predicted from its other runs (:func:`macha.align.metrics.loo_prediction_error`).  Returns
+    ``(model, cv)`` with ``cv`` the held-out RMSE per (K, lam).  The choice is made on at most ``max_anchors``
+    anchors (a random subset); the final model uses all of them.
+    """
+    from .metrics import loo_prediction_error
+
+    T_all = np.asarray(T, float)
+    S_all = S
+    t_range = kw.pop("t_range", None) or support_range(T_all)
+    if T_all.shape[0] > max_anchors:
+        sel = np.sort(np.random.default_rng(seed).choice(T_all.shape[0], max_anchors, replace=False))
+        T, S = T_all[sel], (None if S_all is None else S_all[sel])
+    else:
+        T = T_all
+    mu = np.nanmedian(T, axis=1)
+    blocks = np.floor((mu - np.nanmin(mu)) / block).astype(np.int64)
+    perm = np.random.default_rng(seed).permutation(blocks.max() + 1)
+    fold = perm[blocks] % n_folds
+    rows = []
+    for K in range(1, K_max + 1):
+        if K > 1 and np.isfinite(T).all(axis=1).sum() < 10 * K:
+            break
+        for lam in lams:
+            err = []
+            for f in range(n_folds):
+                tr, te = fold != f, fold == f
+                if te.sum() == 0 or tr.sum() < 10 * K:
+                    continue
+                m = fit_drift(T[tr], K, t_range=t_range, lam=lam, seed=seed, S=None if S is None else S[tr], **kw)
+                err.append(loo_prediction_error(m, T[te]).ravel())
+            e = np.concatenate(err) if err else np.array([np.nan])
+            e = e[np.isfinite(e)]
+            # a robust RMSE: gross mismatches would otherwise dominate the choice
+            rows.append(dict(K=K, lam=lam, rmse=float(np.sqrt(np.mean(np.minimum(e * e, 25.0)))) if e.size else np.nan,
+                             n=int(e.size)))
+    import pandas as pd
+
+    cv = pd.DataFrame(rows)
+    best = cv.loc[cv["rmse"].idxmin()]
+    model = fit_drift(T_all, int(best.K), t_range=t_range, lam=float(best.lam), seed=seed, S=S_all, **kw)
+    return model, cv

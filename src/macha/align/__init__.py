@@ -47,19 +47,22 @@ def align(tables: list[pd.DataFrame], K: int | None = None, K_max: int = 4, drif
           mz_ppm: float = 5.0, anchor_ppm: float = 6.0, rt_window: float = 60.0, min_frac: float = 0.6,
           sigma_t: float | None = None, birth_cost: float = 10.0, gate: float = 4.0, sys_ppm: float = 0.5,
           n_refine: int = 2, refit: bool = True, n_basis: int = 12, lam: float = 1.0, calibrate_mz: bool = True,
-          nu: float = 5.0, refit_max: int = 6000, value: str = "height", seed: int = 0) -> Alignment:
+          nu: float = 5.0, refit_max: int = 6000, value: str = "height", seed: int = 0,
+          anchors: Anchors | None = None) -> Alignment:
     """Align feature tables from several runs.
 
     ``drift='fit'`` learns the drift-trend mixture (K fixed or chosen by BIC
     up to ``K_max``); ``drift='none'`` matches on raw RTs with tolerance
     ``sigma_t`` (used for reference comparisons and pre-corrected RTs).
+    ``anchors`` replaces the feature anchors, e.g. relation anchors from the
+    scan graph (:func:`macha.align.edges.relation_anchors`).
     """
     t0 = time.perf_counter()
     J = len(tables)
     tables = [t.reset_index(drop=True) for t in tables]
     allrt = np.concatenate([t["rt"].to_numpy() for t in tables])
     t_range = (float(allrt.min()) - 1.0, float(allrt.max()) + 1.0)
-    anchors = find_anchors(tables, anchor_ppm, rt_window, min_frac)
+    anchors = anchors if anchors is not None else find_anchors(tables, anchor_ppm, rt_window, min_frac)
     cal = fit_mz_calibration(anchors, t_range) if (calibrate_mz and len(anchors.rt) >= 10) else None
     t1 = time.perf_counter()
     fits = []

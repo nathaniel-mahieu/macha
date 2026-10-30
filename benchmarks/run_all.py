@@ -16,7 +16,7 @@ from common import NAV, REPORTS
 from macha.report import Page
 
 MODULES = ["bench_io", "bench_traces", "bench_baseline", "bench_peaks", "bench_annotate", "bench_scan_graph",
-           "bench_align"]
+           "bench_align", "bench_xrun"]
 
 
 def load(name):
@@ -71,6 +71,12 @@ def index():
         x = s[s.batch == "three-trends-strong"].set_index("method")
         tiles.append(("Alignment: RT spread, 3 drift trends", f"{x.loc['macha', 'rt_rms_s']:.2f} s",
                       f"global warp {x.loc['global', 'rt_rms_s']:.2f} s, DTW {x.loc['dtw', 'rt_rms_s']:.2f} s"))
+    xr = load("xrun")
+    if xr:
+        d = pd.DataFrame(xr["drift"])
+        c = d[d.fit == "cv"].groupby("anchors_from").loo_rmse_s.mean()
+        tiles.append(("Drift without peaks: held-out RT error", f"{c['relations']:.2f} s",
+                      f"relation anchors from the scan graph; feature anchors {c['features']:.2f} s"))
     page.tiles(tiles)
     page.section("Modules", """
 <p>Each module is usable on its own; <code>macha.pipeline</code> only fixes the order.</p>
@@ -93,6 +99,9 @@ width.</li>
 <li><a href="align.html"><b>macha.align</b></a>: drift-trend mixture model of retention-time warps with
 probabilistic, one-per-run correspondence and membership probabilities (replaces grtgmzcor / warpgroup /
 warpcombine DTW).</li>
+<li><a href="xrun.html"><b>cross-run graph</b></a> (<code>macha.align.edges</code>): drift learned from scan-graph
+relations matched across runs, before peak detection, with centre precision calibrated on cross-run double
+differences and noise measured per ROI (<code>macha.traces.noise</code>).</li>
 <li><b>macha.synth</b>: the ground-truth simulator behind every accuracy number: fine-structure isotopes, adducts,
 EMG elution, Orbitrap-like coalescence, precision and censoring, multi-run batches with class-specific drift.</li>
 </ul>""")

@@ -9,7 +9,7 @@
    "complete_ions": 0.9123595505617977,
    "n_groups": 2980,
    "rt_rms_s": 3.964176527452995,
-   "seconds": 0.013495082966983318,
+   "seconds": 0.013903459010180086,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -23,7 +23,7 @@
    "complete_ions": 0.9520599250936329,
    "n_groups": 2946,
    "rt_rms_s": 3.964176527452995,
-   "seconds": 0.37368383299326524,
+   "seconds": 0.41808274999493733,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -37,7 +37,7 @@
    "complete_ions": 0.9719101123595506,
    "n_groups": 2949,
    "rt_rms_s": 1.1330729822056362,
-   "seconds": 0.3868484999984503,
+   "seconds": 0.38982241600751877,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -50,10 +50,10 @@
    "f1": 0.9863227890513583,
    "complete_ions": 0.9722846441947566,
    "n_groups": 2961,
-   "rt_rms_s": 0.5272001276492367,
-   "seconds": 0.7340453749638982,
+   "rt_rms_s": 0.5271967874481368,
+   "seconds": 0.7519486249657348,
    "K": 1.0,
-   "sigma_s": 0.31751260337415327,
+   "sigma_s": 0.31708051523074215,
    "local_class_agreement": NaN
   },
   {
@@ -64,10 +64,10 @@
    "f1": 0.9863227890513583,
    "complete_ions": 0.9722846441947566,
    "n_groups": 2961,
-   "rt_rms_s": 0.5272001276492367,
-   "seconds": 3.03858491696883,
+   "rt_rms_s": 0.5271967874481368,
+   "seconds": 3.700077790999785,
    "K": 1.0,
-   "sigma_s": 0.31751260337415327,
+   "sigma_s": 0.31708051523074215,
    "local_class_agreement": NaN
   },
   {
@@ -79,7 +79,7 @@
    "complete_ions": 0.938027136046938,
    "n_groups": 3013,
    "rt_rms_s": 3.200073266345864,
-   "seconds": 0.013457083026878536,
+   "seconds": 0.013878375000786036,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -93,7 +93,7 @@
    "complete_ions": 0.935093509350935,
    "n_groups": 3022,
    "rt_rms_s": 3.200073266345864,
-   "seconds": 0.3643389170174487,
+   "seconds": 0.366422374965623,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -107,7 +107,7 @@
    "complete_ions": 0.9163916391639164,
    "n_groups": 3027,
    "rt_rms_s": 3.844159899365881,
-   "seconds": 0.3872782080434263,
+   "seconds": 0.3928888330119662,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -120,25 +120,25 @@
    "f1": 0.9737776231077083,
    "complete_ions": 0.9387605427209388,
    "n_groups": 3025,
-   "rt_rms_s": 2.656945547848465,
-   "seconds": 0.7473384999902919,
+   "rt_rms_s": 2.6569017034402407,
+   "seconds": 0.7618177079712041,
    "K": 1.0,
-   "sigma_s": 2.4973550427060274,
+   "sigma_s": 2.498417265084938,
    "local_class_agreement": 0.0
   },
   {
    "batch": "three-trends",
    "method": "macha",
-   "precision": 0.9836835945006376,
-   "recall": 0.9757741695114978,
-   "f1": 0.9797129186602871,
-   "complete_ions": 0.9482948294829483,
-   "n_groups": 3042,
-   "rt_rms_s": 0.7451598638471678,
-   "seconds": 10.807582290959544,
+   "precision": 0.983650655021834,
+   "recall": 0.9758608141126727,
+   "f1": 0.9797402507024365,
+   "complete_ions": 0.9471947194719472,
+   "n_groups": 3045,
+   "rt_rms_s": 0.726452995396924,
+   "seconds": 10.125348833040334,
    "K": 4.0,
-   "sigma_s": 0.3636082462842011,
-   "local_class_agreement": 0.5781035534463989
+   "sigma_s": 0.3572502778366328,
+   "local_class_agreement": 0.6156232899098053
   },
   {
    "batch": "three-trends-strong",
@@ -149,7 +149,7 @@
    "complete_ions": 0.7648114901256733,
    "n_groups": 3964,
    "rt_rms_s": 5.699092802390289,
-   "seconds": 0.013819999992847443,
+   "seconds": 0.013762124988716096,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -163,7 +163,7 @@
    "complete_ions": 0.889048473967684,
    "n_groups": 3066,
    "rt_rms_s": 5.699092802390289,
-   "seconds": 0.3637402500025928,
+   "seconds": 0.3720502500073053,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -177,7 +177,7 @@
    "complete_ions": 0.8671454219030521,
    "n_groups": 3069,
    "rt_rms_s": 6.804071594423756,
-   "seconds": 0.3845212919986807,
+   "seconds": 0.39346487500006333,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -190,25 +190,25 @@
    "f1": 0.9509011917017082,
    "complete_ions": 0.8908438061041293,
    "n_groups": 3066,
-   "rt_rms_s": 4.907402479466848,
-   "seconds": 0.7135384159628302,
+   "rt_rms_s": 4.90729974354999,
+   "seconds": 0.7227442919975147,
    "K": 1.0,
-   "sigma_s": 4.554844531428671,
+   "sigma_s": 4.556725224566997,
    "local_class_agreement": 0.0
   },
   {
    "batch": "three-trends-strong",
    "method": "macha",
-   "precision": 0.9795760808534532,
-   "recall": 0.9673383813005735,
-   "f1": 0.9734187698879735,
-   "complete_ions": 0.9274685816876123,
-   "n_groups": 3111,
-   "rt_rms_s": 1.17532262604262,
-   "seconds": 11.852462082984857,
+   "precision": 0.979455906646515,
+   "recall": 0.9656923050265971,
+   "f1": 0.9725254111590979,
+   "complete_ions": 0.9238779174147217,
+   "n_groups": 3119,
+   "rt_rms_s": 1.1685310971208118,
+   "seconds": 13.547918832977302,
    "K": 4.0,
-   "sigma_s": 0.45604630063517637,
-   "local_class_agreement": 0.6252477804886948
+   "sigma_s": 0.44547652082935635,
+   "local_class_agreement": 0.6248804526070282
   },
   {
    "batch": "peptides-two-trends",
@@ -219,7 +219,7 @@
    "complete_ions": 0.8241124942369755,
    "n_groups": 5738,
    "rt_rms_s": 3.6326046884635037,
-   "seconds": 0.022918624978046864,
+   "seconds": 0.022756165999453515,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -233,7 +233,7 @@
    "complete_ions": 0.979022591055786,
    "n_groups": 4960,
    "rt_rms_s": 3.6326046884635037,
-   "seconds": 0.3947365409694612,
+   "seconds": 0.41272779199061915,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -247,7 +247,7 @@
    "complete_ions": 0.9774089442139234,
    "n_groups": 4963,
    "rt_rms_s": 7.198347383517622,
-   "seconds": 0.39913279097527266,
+   "seconds": 0.42535983299603686,
    "K": NaN,
    "sigma_s": NaN,
    "local_class_agreement": NaN
@@ -260,25 +260,25 @@
    "f1": 0.9932998981271061,
    "complete_ions": 0.9794836330106039,
    "n_groups": 4961,
-   "rt_rms_s": 2.5219607230330423,
-   "seconds": 0.746677124989219,
+   "rt_rms_s": 2.5219548590368994,
+   "seconds": 0.7926868330105208,
    "K": 1.0,
-   "sigma_s": 2.45171533875047,
+   "sigma_s": 2.450263585791408,
    "local_class_agreement": 0.0
   },
   {
    "batch": "peptides-two-trends",
    "method": "macha",
-   "precision": 0.9991740900241873,
-   "recall": 0.990313401418882,
-   "f1": 0.9947240140562446,
+   "precision": 0.9991741549835814,
+   "recall": 0.9903913619708428,
+   "f1": 0.9947633729750893,
    "complete_ions": 0.979253112033195,
    "n_groups": 4967,
-   "rt_rms_s": 0.7819536345446979,
-   "seconds": 9.170769624994136,
+   "rt_rms_s": 0.7814370625934335,
+   "seconds": 9.377413207956124,
    "K": 3.0,
-   "sigma_s": 0.3659340067285498,
-   "local_class_agreement": 0.6406564485648887
+   "sigma_s": 0.3800802226131614,
+   "local_class_agreement": 0.6422492871338713
   }
  ],
  "real": [
@@ -286,209 +286,209 @@
    "dataset": "Astral DIA 250 pg (PXD049412)",
    "runs": 6,
    "method": "none",
-   "features": 850088,
-   "groups": 252661,
-   "groups_in_all_runs": 61561,
+   "features": 874687,
+   "groups": 259120,
+   "groups_in_all_runs": 64187,
    "K": NaN,
    "sigma_s": NaN,
-   "anchors": 4137,
-   "isotope_rt_disagreement_s": 0.06225867605462554,
-   "isotope_pairs_same_group_pattern": 0.867,
-   "seconds": 11.90921733295545
+   "anchors": 4131,
+   "isotope_rt_disagreement_s": 0.060426542362733926,
+   "isotope_pairs_same_group_pattern": 0.8773333333333333,
+   "seconds": 12.805062750005163
   },
   {
    "dataset": "Astral DIA 250 pg (PXD049412)",
    "runs": 6,
    "method": "global",
-   "features": 850088,
-   "groups": 269170,
-   "groups_in_all_runs": 60890,
+   "features": 874687,
+   "groups": 276669,
+   "groups_in_all_runs": 63450,
    "K": 1,
-   "sigma_s": 0.4672689436964313,
-   "anchors": 4137,
-   "isotope_rt_disagreement_s": 0.05178557594922495,
-   "isotope_pairs_same_group_pattern": 0.8716666666666667,
-   "seconds": 21.418986207980197
+   "sigma_s": 0.41530103325474593,
+   "anchors": 4131,
+   "isotope_rt_disagreement_s": 0.05080800243121075,
+   "isotope_pairs_same_group_pattern": 0.8803333333333333,
+   "seconds": 20.10004058299819
   },
   {
    "dataset": "Astral DIA 250 pg (PXD049412)",
    "runs": 6,
    "method": "macha",
-   "features": 850088,
-   "groups": 269582,
-   "groups_in_all_runs": 60937,
+   "features": 874687,
+   "groups": 277233,
+   "groups_in_all_runs": 63381,
    "K": 4,
-   "sigma_s": 0.31477252756646373,
-   "anchors": 4137,
-   "isotope_rt_disagreement_s": 0.05108413370891185,
-   "isotope_pairs_same_group_pattern": 0.8703333333333333,
-   "seconds": 91.64315887499833
+   "sigma_s": 0.2556435495975631,
+   "anchors": 4131,
+   "isotope_rt_disagreement_s": 0.04968893510761063,
+   "isotope_pairs_same_group_pattern": 0.881,
+   "seconds": 82.01482275000308
   },
   {
    "dataset": "Astral DIA 50 ng (ProteoBench M7)",
-   "runs": 3,
-   "method": "none",
-   "features": 754199,
-   "groups": 364401,
-   "groups_in_all_runs": 144786,
-   "K": NaN,
-   "sigma_s": NaN,
-   "anchors": 8752,
-   "isotope_rt_disagreement_s": 0.12306576663422675,
-   "isotope_pairs_same_group_pattern": 0.939,
-   "seconds": 7.76852941699326
-  },
-  {
-   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
-   "runs": 3,
-   "method": "global",
-   "features": 754199,
-   "groups": 379606,
-   "groups_in_all_runs": 138970,
-   "K": 1,
-   "sigma_s": 0.5669443018386638,
-   "anchors": 8752,
-   "isotope_rt_disagreement_s": 0.10649613654641144,
-   "isotope_pairs_same_group_pattern": 0.9693333333333334,
-   "seconds": 12.63027595798485
-  },
-  {
-   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
-   "runs": 3,
-   "method": "macha",
-   "features": 754199,
-   "groups": 372235,
-   "groups_in_all_runs": 140221,
-   "K": 4,
-   "sigma_s": 0.4012522723206242,
-   "anchors": 8752,
-   "isotope_rt_disagreement_s": 0.10764994312563658,
-   "isotope_pairs_same_group_pattern": 0.9583333333333334,
-   "seconds": 63.95690479100449
-  },
-  {
-   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
    "runs": 6,
    "method": "none",
-   "features": 199759,
-   "groups": 84575,
-   "groups_in_all_runs": 1949,
+   "features": 1475370,
+   "groups": 419295,
+   "groups_in_all_runs": 104773,
    "K": NaN,
    "sigma_s": NaN,
-   "anchors": 2953,
-   "isotope_rt_disagreement_s": 0.057753700715750256,
-   "isotope_pairs_same_group_pattern": 0.8224137931034483,
-   "seconds": 2.2875315839773975
+   "anchors": 5609,
+   "isotope_rt_disagreement_s": 0.07762417761000506,
+   "isotope_pairs_same_group_pattern": 0.9486666666666667,
+   "seconds": 21.39918641699478
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "runs": 6,
+   "method": "global",
+   "features": 1475370,
+   "groups": 459439,
+   "groups_in_all_runs": 101155,
+   "K": 1,
+   "sigma_s": 0.43465296190550223,
+   "anchors": 5609,
+   "isotope_rt_disagreement_s": 0.07101548004220604,
+   "isotope_pairs_same_group_pattern": 0.963,
+   "seconds": 34.8589769579703
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "runs": 6,
+   "method": "macha",
+   "features": 1475370,
+   "groups": 449908,
+   "groups_in_all_runs": 101973,
+   "K": 4,
+   "sigma_s": 0.3253134673648663,
+   "anchors": 5609,
+   "isotope_rt_disagreement_s": 0.07108288200225843,
+   "isotope_pairs_same_group_pattern": 0.9616666666666667,
+   "seconds": 142.10643712501042
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "runs": 6,
+   "method": "none",
+   "features": 198405,
+   "groups": 84161,
+   "groups_in_all_runs": 1960,
+   "K": NaN,
+   "sigma_s": NaN,
+   "anchors": 2956,
+   "isotope_rt_disagreement_s": 0.05629152404105753,
+   "isotope_pairs_same_group_pattern": 0.8271889400921659,
+   "seconds": 2.4141511250054464
   },
   {
    "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
    "runs": 6,
    "method": "global",
-   "features": 199759,
-   "groups": 88103,
-   "groups_in_all_runs": 1791,
+   "features": 198405,
+   "groups": 89832,
+   "groups_in_all_runs": 1708,
    "K": 1,
-   "sigma_s": 0.39605410468582675,
-   "anchors": 2953,
-   "isotope_rt_disagreement_s": 0.047704653893930526,
-   "isotope_pairs_same_group_pattern": 0.8615654205607477,
-   "seconds": 4.538844250026159
+   "sigma_s": 0.2475792520321696,
+   "anchors": 2956,
+   "isotope_rt_disagreement_s": 0.0465263735577679,
+   "isotope_pairs_same_group_pattern": 0.8676470588235294,
+   "seconds": 4.862350166949909
   },
   {
    "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
    "runs": 6,
    "method": "macha",
-   "features": 199759,
-   "groups": 87694,
-   "groups_in_all_runs": 1858,
-   "K": 3,
-   "sigma_s": 0.30400249759845116,
-   "anchors": 2953,
-   "isotope_rt_disagreement_s": 0.05460146807063637,
-   "isotope_pairs_same_group_pattern": 0.84192037470726,
-   "seconds": 27.349791957996786
+   "features": 198405,
+   "groups": 88848,
+   "groups_in_all_runs": 1766,
+   "K": 4,
+   "sigma_s": 0.17968319014400058,
+   "anchors": 2956,
+   "isotope_rt_disagreement_s": 0.06107639038225443,
+   "isotope_pairs_same_group_pattern": 0.8417056074766355,
+   "seconds": 31.042298624990508
   }
  ],
  "bic": [
   {
    "batch": "one-trend",
    "K": 1,
-   "bic": 20573.651246193927
+   "bic": 20548.912399836918
   },
   {
    "batch": "one-trend",
    "K": 2,
-   "bic": 21068.035333383174
+   "bic": 21065.949984264662
   },
   {
    "batch": "one-trend",
    "K": 3,
-   "bic": 21674.921659308893
+   "bic": 21654.555145465252
   },
   {
    "batch": "one-trend",
    "K": 4,
-   "bic": 22249.2845054868
+   "bic": 22215.618825144284
   },
   {
    "batch": "three-trends",
    "K": 1,
-   "bic": 51624.71385883518
+   "bic": 51624.71321598039
   },
   {
    "batch": "three-trends",
    "K": 2,
-   "bic": 39337.66432181834
+   "bic": 39313.51652419838
   },
   {
    "batch": "three-trends",
    "K": 3,
-   "bic": 28580.077925588663
+   "bic": 28518.274408918405
   },
   {
    "batch": "three-trends",
    "K": 4,
-   "bic": 26680.896976172924
+   "bic": 26628.911100643003
   },
   {
    "batch": "three-trends-strong",
    "K": 1,
-   "bic": 61077.98899771709
+   "bic": 61077.90614733527
   },
   {
    "batch": "three-trends-strong",
    "K": 2,
-   "bic": 44985.36737275436
+   "bic": 44962.631765615275
   },
   {
    "batch": "three-trends-strong",
    "K": 3,
-   "bic": 34001.85925751125
+   "bic": 33950.42172850477
   },
   {
    "batch": "three-trends-strong",
    "K": 4,
-   "bic": 31525.26352975409
+   "bic": 31419.19057816859
   },
   {
    "batch": "peptides-two-trends",
    "K": 1,
-   "bic": 70248.78964447159
+   "bic": 70248.76327197572
   },
   {
    "batch": "peptides-two-trends",
    "K": 2,
-   "bic": 41559.24931955744
+   "bic": 41476.03067122435
   },
   {
    "batch": "peptides-two-trends",
    "K": 3,
-   "bic": 40399.049540933105
+   "bic": 40378.096946132486
   },
   {
    "batch": "peptides-two-trends",
    "K": 4,
-   "bic": 40733.7753870617
+   "bic": 40698.43672839248
   }
  ]
 }

@@ -57,11 +57,7 @@ DATASETS = {
     },
     "proteomics": {
         "description": "ProteoBench M7: 50 ng LFQ, 15 min gradient, Orbitrap Astral DIA",
-        "files": {
-            "A_r1": PB7.format("Condition_A_REP1"),
-            "A_r2": PB7.format("Condition_A_REP2"),
-            "B_r1": PB7.format("Condition_B_REP1"),
-        },
+        "files": {f"{c}_r{r}": PB7.format(f"Condition_{c}_REP{r}") for c in ("A", "B") for r in (1, 2, 3)},
     },
 }
 
