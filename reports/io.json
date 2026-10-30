@@ -1,0 +1,193 @@
+{
+ "throughput": [
+  {
+   "file": "synthetic proteomics.mzML",
+   "MB": 7.412177,
+   "spectra": 1500,
+   "centroids": 409940,
+   "seconds": 0.06793874996947125,
+   "MB_per_s": 109.10087399798662,
+   "centroids_per_s": 6033964.419189482
+  },
+  {
+   "file": "synthetic proteomics.mzML.gz",
+   "MB": 4.750217,
+   "spectra": 1500,
+   "centroids": 409940,
+   "seconds": 0.08065116702346131,
+   "MB_per_s": 58.89830457900465,
+   "centroids_per_s": 5082877.4725696035
+  },
+  {
+   "file": "same run as MSRun .npz",
+   "MB": 4.462173,
+   "spectra": 1500,
+   "centroids": 409940,
+   "seconds": 0.011921875004190952,
+   "MB_per_s": 374.28449790250204,
+   "centroids_per_s": 34385530.78738805
+  }
+ ],
+ "real": [
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "run": "A_r1",
+   "scans": 1827,
+   "centroids": 2605190,
+   "rt_end_s": 1433.2648720000002,
+   "streamed_MB": 390.561088,
+   "stream_seconds": 114.7,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "run": "A_r2",
+   "scans": 1831,
+   "centroids": 2653721,
+   "rt_end_s": 1433.3761599999998,
+   "streamed_MB": 404.794869,
+   "stream_seconds": 157.0,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "run": "A_r3",
+   "scans": 1831,
+   "centroids": 2641415,
+   "rt_end_s": 1433.622512,
+   "streamed_MB": 394.526452,
+   "stream_seconds": 158.1,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "run": "B_r1",
+   "scans": 1842,
+   "centroids": 2719418,
+   "rt_end_s": 1433.21204,
+   "streamed_MB": 441.979443,
+   "stream_seconds": 187.0,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "run": "B_r2",
+   "scans": 1859,
+   "centroids": 2908096,
+   "rt_end_s": 1433.5843000000002,
+   "streamed_MB": 497.456888,
+   "stream_seconds": 248.8,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "run": "B_r3",
+   "scans": 1856,
+   "centroids": 2861114,
+   "rt_end_s": 1433.0506960000002,
+   "streamed_MB": 482.863859,
+   "stream_seconds": 177.5,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "run": "A_r1",
+   "scans": 2931,
+   "centroids": 8026561,
+   "rt_end_s": 1610.669485000002,
+   "streamed_MB": 1498.544361,
+   "stream_seconds": 639.3,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "run": "A_r2",
+   "scans": 2933,
+   "centroids": 8021319,
+   "rt_end_s": 1610.8878250000002,
+   "streamed_MB": 1495.820548,
+   "stream_seconds": 670.3,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "run": "B_r1",
+   "scans": 2933,
+   "centroids": 8356544,
+   "rt_end_s": 1610.8293949999997,
+   "streamed_MB": 1577.43916,
+   "stream_seconds": 543.7,
+   "source": "archive.openms.de"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Sa04_inj005",
+   "scans": 1815,
+   "centroids": 2422587,
+   "rt_end_s": 895.12132000002,
+   "streamed_MB": 628.637741,
+   "stream_seconds": 27.2,
+   "source": "massive.ucsd.edu"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Sa09_inj006",
+   "scans": 1791,
+   "centroids": 2417578,
+   "rt_end_s": 895.50718399998,
+   "streamed_MB": 614.257566,
+   "stream_seconds": 26.2,
+   "source": "massive.ucsd.edu"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Sa17_inj007",
+   "scans": 1725,
+   "centroids": 2355831,
+   "rt_end_s": 895.16028799998,
+   "streamed_MB": 583.201191,
+   "stream_seconds": 148.2,
+   "source": "massive.ucsd.edu"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Sa04_inj018",
+   "scans": 1808,
+   "centroids": 2470545,
+   "rt_end_s": 895.1677199999999,
+   "streamed_MB": 638.220664,
+   "stream_seconds": 38.5,
+   "source": "massive.ucsd.edu"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Sa04_inj023",
+   "scans": 1809,
+   "centroids": 2488032,
+   "rt_end_s": 895.5444160000201,
+   "streamed_MB": 641.167847,
+   "stream_seconds": 388.9,
+   "source": "massive.ucsd.edu"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Blank_inj001",
+   "scans": 1809,
+   "centroids": 1895212,
+   "rt_end_s": 895.1606400000001,
+   "streamed_MB": 586.770908,
+   "stream_seconds": 145.7,
+   "source": "massive.ucsd.edu"
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "run": "Sa04_inj005_multirange",
+   "scans": 3318,
+   "centroids": 2350921,
+   "rt_end_s": 895.55459200002,
+   "streamed_MB": 620.749541,
+   "stream_seconds": 748.6,
+   "source": "massive.ucsd.edu"
+  }
+ ]
+}

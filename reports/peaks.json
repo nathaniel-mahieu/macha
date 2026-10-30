@@ -1,0 +1,429 @@
+{
+ "summary": [
+  {
+   "method": "cwt",
+   "recall": 0.8140703517587939,
+   "precision": 0.9576354679802955,
+   "apex_mae_scans": 0.6460922650000863,
+   "ms_per_trace": 1.6482171573443338,
+   "f1": 0.8800362154821186
+  },
+  {
+   "method": "macha",
+   "recall": 0.8165829145728644,
+   "precision": 1.0,
+   "apex_mae_scans": 0.4436595739098072,
+   "ms_per_trace": 0.09172530160867609,
+   "f1": 0.8990318118948823
+  },
+  {
+   "method": "sspp",
+   "recall": 0.9154103852596315,
+   "precision": 0.5429706905116741,
+   "apex_mae_scans": 0.6634100297534068,
+   "ms_per_trace": 1.2101474071096163,
+   "f1": 0.6816339257873402
+  }
+ ],
+ "recall": [
+  {
+   "method": "cwt",
+   "bin": "(3, 5]",
+   "found": "0.24822695035460993"
+  },
+  {
+   "method": "cwt",
+   "bin": "(5, 10]",
+   "found": "0.7606382978723404"
+  },
+  {
+   "method": "cwt",
+   "bin": "(10, 20]",
+   "found": "0.8172043010752689"
+  },
+  {
+   "method": "cwt",
+   "bin": "(20, 50]",
+   "found": "0.9122807017543859"
+  },
+  {
+   "method": "cwt",
+   "bin": "(50, 100]",
+   "found": "0.9653179190751445"
+  },
+  {
+   "method": "cwt",
+   "bin": "(100, 300]",
+   "found": "0.960431654676259"
+  },
+  {
+   "method": "macha",
+   "bin": "(3, 5]",
+   "found": "0.14184397163120568"
+  },
+  {
+   "method": "macha",
+   "bin": "(5, 10]",
+   "found": "0.824468085106383"
+  },
+  {
+   "method": "macha",
+   "bin": "(10, 20]",
+   "found": "0.8494623655913979"
+  },
+  {
+   "method": "macha",
+   "bin": "(20, 50]",
+   "found": "0.9122807017543859"
+  },
+  {
+   "method": "macha",
+   "bin": "(50, 100]",
+   "found": "0.9710982658959537"
+  },
+  {
+   "method": "macha",
+   "bin": "(100, 300]",
+   "found": "0.9568345323741008"
+  },
+  {
+   "method": "sspp",
+   "bin": "(3, 5]",
+   "found": "0.5531914893617021"
+  },
+  {
+   "method": "sspp",
+   "bin": "(5, 10]",
+   "found": "0.9574468085106383"
+  },
+  {
+   "method": "sspp",
+   "bin": "(10, 20]",
+   "found": "0.946236559139785"
+  },
+  {
+   "method": "sspp",
+   "bin": "(20, 50]",
+   "found": "0.956140350877193"
+  },
+  {
+   "method": "sspp",
+   "bin": "(50, 100]",
+   "found": "0.9826589595375722"
+  },
+  {
+   "method": "sspp",
+   "bin": "(100, 300]",
+   "found": "0.9748201438848921"
+  }
+ ],
+ "pairs": [
+  {
+   "method": "cwt",
+   "sep": 1.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "cwt",
+   "sep": 1.5,
+   "resolved": 0.9333333333333333
+  },
+  {
+   "method": "cwt",
+   "sep": 2.0,
+   "resolved": 0.0
+  },
+  {
+   "method": "cwt",
+   "sep": 2.5,
+   "resolved": 0.05
+  },
+  {
+   "method": "cwt",
+   "sep": 3.0,
+   "resolved": 0.5
+  },
+  {
+   "method": "cwt",
+   "sep": 3.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "cwt",
+   "sep": 4.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "cwt",
+   "sep": 4.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "cwt",
+   "sep": 5.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "cwt",
+   "sep": 5.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "cwt",
+   "sep": 6.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 1.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 1.5,
+   "resolved": 0.0
+  },
+  {
+   "method": "macha",
+   "sep": 2.0,
+   "resolved": 0.0
+  },
+  {
+   "method": "macha",
+   "sep": 2.5,
+   "resolved": 0.0
+  },
+  {
+   "method": "macha",
+   "sep": 3.0,
+   "resolved": 0.016666666666666666
+  },
+  {
+   "method": "macha",
+   "sep": 3.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 4.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 4.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 5.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 5.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "macha",
+   "sep": 6.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 1.0,
+   "resolved": 0.95
+  },
+  {
+   "method": "sspp",
+   "sep": 1.5,
+   "resolved": 0.0
+  },
+  {
+   "method": "sspp",
+   "sep": 2.0,
+   "resolved": 0.0
+  },
+  {
+   "method": "sspp",
+   "sep": 2.5,
+   "resolved": 0.08333333333333333
+  },
+  {
+   "method": "sspp",
+   "sep": 3.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 3.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 4.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 4.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 5.0,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 5.5,
+   "resolved": 1.0
+  },
+  {
+   "method": "sspp",
+   "sep": 6.0,
+   "resolved": 1.0
+  }
+ ],
+ "runs": [
+  {
+   "dataset": "syn-metabolomics",
+   "true_snr": "5-10",
+   "ion_recall": 0.3856088560885609,
+   "n_ions": 542,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-metabolomics",
+   "true_snr": "10-30",
+   "ion_recall": 0.9518413597733711,
+   "n_ions": 706,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-metabolomics",
+   "true_snr": "30-\u221e",
+   "ion_recall": 0.9958123953098827,
+   "n_ions": 1194,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-metabolomics",
+   "true_snr": "all",
+   "ion_recall": NaN,
+   "n_ions": 2127,
+   "rt_mae_s": 0.29866448062660633,
+   "feature_purity": 0.99691412541405,
+   "pipeline_s": 1.8633122500032187
+  },
+  {
+   "dataset": "syn-proteomics",
+   "true_snr": "5-10",
+   "ion_recall": 0.3483735571878279,
+   "n_ions": 953,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-proteomics",
+   "true_snr": "10-30",
+   "ion_recall": 0.9374090247452693,
+   "n_ions": 1374,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-proteomics",
+   "true_snr": "30-\u221e",
+   "ion_recall": 0.9978417266187051,
+   "n_ions": 1390,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-proteomics",
+   "true_snr": "all",
+   "ion_recall": NaN,
+   "n_ions": 3061,
+   "rt_mae_s": 0.5418184437089031,
+   "feature_purity": 0.9953327132280027,
+   "pipeline_s": 1.0887434159521945
+  },
+  {
+   "dataset": "syn-hard",
+   "true_snr": "5-10",
+   "ion_recall": 0.3104956268221574,
+   "n_ions": 686,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-hard",
+   "true_snr": "10-30",
+   "ion_recall": 0.8909657320872274,
+   "n_ions": 963,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-hard",
+   "true_snr": "30-\u221e",
+   "ion_recall": 0.9796954314720813,
+   "n_ions": 1379,
+   "rt_mae_s": NaN,
+   "feature_purity": NaN,
+   "pipeline_s": NaN
+  },
+  {
+   "dataset": "syn-hard",
+   "true_snr": "all",
+   "ion_recall": NaN,
+   "n_ions": 2637,
+   "rt_mae_s": 0.3702692029058006,
+   "feature_purity": 0.9835328800055771,
+   "pipeline_s": 3.271009000018239
+  }
+ ],
+ "real": [
+  {
+   "dataset": "Astral DIA 250 pg (PXD049412)",
+   "centroids": 2605190,
+   "traces": 156619,
+   "features": 131409,
+   "median_fwhm_s": 3.07360652922909,
+   "median_snr": 17.42217456853048,
+   "median_mz_se_ppm": 0.3648036513456643,
+   "seconds": 7.734061208029743
+  },
+  {
+   "dataset": "Astral DIA 50 ng (ProteoBench M7)",
+   "centroids": 8026561,
+   "traces": 277130,
+   "features": 252011,
+   "median_fwhm_s": 2.8365302134543726,
+   "median_snr": 12.041909228690972,
+   "median_mz_se_ppm": 0.2263278325114075,
+   "seconds": 18.956765667011496
+  },
+  {
+   "dataset": "Astral NIST fecal, RP+ (MSV000093526)",
+   "centroids": 2422587,
+   "traces": 42116,
+   "features": 37413,
+   "median_fwhm_s": 2.592046658610589,
+   "median_snr": 11.542194924271838,
+   "median_mz_se_ppm": 0.18321036511355882,
+   "seconds": 6.7206767500028946
+  }
+ ]
+}

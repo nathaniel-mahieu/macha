@@ -6,3 +6,13 @@
 data/rawdata
 inst/development*
 .sync
+
+# Python rewrite
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+data/astral/
+data/synthetic/
+data/fasta/

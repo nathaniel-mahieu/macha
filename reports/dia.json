@@ -1,0 +1,475 @@
+{
+ "summary": [
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "co-elution only",
+   "groups": 6629,
+   "median_fragments": 4.0,
+   "peptides_1pct": 2601,
+   "seconds": 4.872201420890633,
+   "true_ids": 2565.0,
+   "actual_fdr": 0.01384083044982698
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder graph",
+   "groups": 24611,
+   "median_fragments": 4.0,
+   "peptides_1pct": 228,
+   "seconds": 150.46367224911228,
+   "true_ids": 226.0,
+   "actual_fdr": 0.00877192982456143
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder-seeded",
+   "groups": 11456,
+   "median_fragments": 9.0,
+   "peptides_1pct": 2384,
+   "seconds": 150.46367224911228,
+   "true_ids": 2367.0,
+   "actual_fdr": 0.007130872483221529
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored",
+   "groups": 8199,
+   "median_fragments": 17.0,
+   "peptides_1pct": 3963,
+   "seconds": 3.5613123331568204,
+   "true_ids": 3923.0,
+   "actual_fdr": 0.010093363613424167
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "groups": 10674,
+   "median_fragments": 12.0,
+   "peptides_1pct": 4114,
+   "seconds": 154.0249845822691,
+   "true_ids": 4075.0,
+   "actual_fdr": 0.009479824987846386
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "co-elution only",
+   "groups": 7403,
+   "median_fragments": 3.0,
+   "peptides_1pct": 1444,
+   "seconds": 15.775400291953702,
+   "true_ids": 1431.0,
+   "actual_fdr": 0.009002770083102463
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder graph",
+   "groups": 24952,
+   "median_fragments": 3.0,
+   "peptides_1pct": 5,
+   "seconds": 199.21914074989036,
+   "true_ids": 4.0,
+   "actual_fdr": 0.19999999999999996
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder-seeded",
+   "groups": 7944,
+   "median_fragments": 30.0,
+   "peptides_1pct": 1717,
+   "seconds": 199.21914074989036,
+   "true_ids": 1704.0,
+   "actual_fdr": 0.007571345369831062
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored",
+   "groups": 7747,
+   "median_fragments": 63.0,
+   "peptides_1pct": 3473,
+   "seconds": 3.7932121659396216,
+   "true_ids": 3429.0,
+   "actual_fdr": 0.01266916210768787
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "groups": 8163,
+   "median_fragments": 59.0,
+   "peptides_1pct": 3462,
+   "seconds": 203.01235291582998,
+   "true_ids": 3422.0,
+   "actual_fdr": 0.011554015020219577
+  },
+  {
+   "dataset": "Astral 250 pg (HeLa + yeast)",
+   "approach": "co-elution only",
+   "groups": 19798,
+   "median_fragments": 3.0,
+   "peptides_1pct": 229,
+   "seconds": 55.762875208922196,
+   "true_ids": NaN,
+   "actual_fdr": NaN
+  },
+  {
+   "dataset": "Astral 250 pg (HeLa + yeast)",
+   "approach": "ladder graph",
+   "groups": 1225,
+   "median_fragments": 3.0,
+   "peptides_1pct": 0,
+   "seconds": 303.2636978739756,
+   "true_ids": NaN,
+   "actual_fdr": NaN
+  },
+  {
+   "dataset": "Astral 250 pg (HeLa + yeast)",
+   "approach": "ladder-seeded",
+   "groups": 3072,
+   "median_fragments": 33.0,
+   "peptides_1pct": 318,
+   "seconds": 303.2636978739756,
+   "true_ids": NaN,
+   "actual_fdr": NaN
+  },
+  {
+   "dataset": "Astral 250 pg (HeLa + yeast)",
+   "approach": "MS1-anchored",
+   "groups": 9944,
+   "median_fragments": 21.0,
+   "peptides_1pct": 423,
+   "seconds": 15.096366790996399,
+   "true_ids": NaN,
+   "actual_fdr": NaN
+  },
+  {
+   "dataset": "Astral 250 pg (HeLa + yeast)",
+   "approach": "MS1-anchored + ladder rescue",
+   "groups": 11255,
+   "median_fragments": 21.0,
+   "peptides_1pct": 438,
+   "seconds": 318.360064664972,
+   "true_ids": NaN,
+   "actual_fdr": NaN
+  }
+ ],
+ "recall": [
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "co-elution only",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0004020908725371934
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "co-elution only",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.04848754448398576
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "co-elution only",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.42729211087420044
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "co-elution only",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.8542034097589654
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder graph",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder graph",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.00044483985765124553
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder graph",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.01279317697228145
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder graph",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.1146384479717813
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0008041817450743868
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.07962633451957295
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.4409381663113006
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.6772486772486772
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.006835544833132288
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.3251779359430605
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.7304904051172708
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.8594944150499706
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.013671089666264576
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.34341637010676157
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.7560767590618337
+  },
+  {
+   "dataset": "synthetic 2 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.8788947677836567
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "co-elution only",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "co-elution only",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.01201067615658363
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "co-elution only",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.1812366737739872
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "co-elution only",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.5755437977660199
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder graph",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder graph",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.0
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder graph",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.0
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder graph",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.0023515579071134627
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0004020908725371934
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.04581850533807829
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.29936034115138593
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "ladder-seeded",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.5279247501469724
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0008041817450743868
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.21085409252669038
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.6426439232409382
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.8500881834215167
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": "0-10",
+   "n": 2487,
+   "recall": 0.0012062726176115801
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": "10-30",
+   "n": 2248,
+   "recall": 0.20774021352313168
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": "30-100",
+   "n": 2345,
+   "recall": 0.6417910447761194
+  },
+  {
+   "dataset": "synthetic 20 Th",
+   "approach": "MS1-anchored + ladder rescue",
+   "snr_bin": ">100",
+   "n": 1701,
+   "recall": 0.8506760728982952
+  }
+ ],
+ "overlap": [
+  {
+   "approach": "co-elution only",
+   "identified": 229,
+   "only_this": 24,
+   "share_of_union": 0.4378585086042065
+  },
+  {
+   "approach": "ladder graph",
+   "identified": 0,
+   "only_this": 0,
+   "share_of_union": 0.0
+  },
+  {
+   "approach": "ladder-seeded",
+   "identified": 318,
+   "only_this": 51,
+   "share_of_union": 0.6080305927342257
+  },
+  {
+   "approach": "MS1-anchored",
+   "identified": 423,
+   "only_this": 145,
+   "share_of_union": 0.8087954110898662
+  },
+  {
+   "approach": "MS1-anchored + ladder rescue",
+   "identified": 438,
+   "only_this": 41,
+   "share_of_union": 0.8374760994263862
+  }
+ ],
+ "real_windows": [
+  3,
+  7,
+  11,
+  15
+ ],
+ "union": 523
+}
