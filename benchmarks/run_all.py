@@ -16,7 +16,7 @@ from common import NAV, REPORTS
 from macha.report import Page
 
 MODULES = ["bench_io", "bench_traces", "bench_baseline", "bench_peaks", "bench_annotate", "bench_scan_graph",
-           "bench_dia", "bench_align", "bench_xrun"]
+           "bench_dia", "bench_align", "bench_xrun", "bench_components"]
 
 
 def load(name):
@@ -85,6 +85,11 @@ def index():
         c = d[d.fit == "cv"].groupby("anchors_from").loo_rmse_s.mean()
         tiles.append(("Drift without peaks: held-out RT error", f"{c['relations']:.2f} s",
                       f"relation anchors from the scan graph; feature anchors {c['features']:.2f} s"))
+    cp = load("components")
+    if cp:
+        r = cp["deconvolution"]["resolved"]
+        tiles.append(("Merged near-isobaric pairs resolved", f"{r['mz']:.0%}",
+                      f"components with the m/z trajectory; intensity only {r['int']:.0%}, picked peaks {r['peaks']:.0%}"))
     page.tiles(tiles)
     page.section("Modules", """
 <p>Each module is usable on its own; <code>macha.pipeline</code> only fixes the order.</p>
@@ -113,6 +118,9 @@ warpcombine DTW).</li>
 <li><a href="xrun.html"><b>cross-run graph</b></a> (<code>macha.align.edges</code>): drift learned from scan-graph
 relations matched across runs, before peak detection, with centre precision calibrated on cross-run double
 differences and noise measured per ROI (<code>macha.traces.noise</code>).</li>
+<li><a href="components.html"><b>macha.components</b></a>: peak models of scan-graph relation clusters: one shared
+EMG per compound, split where two sources share an ion (with the m/z trajectory of coalesced centroids), linked
+across runs and quantified in every run with the learned shape, censored at each ion's own noise floor.</li>
 <li><b>macha.synth</b>: the ground-truth simulator behind every accuracy number: fine-structure isotopes, adducts,
 EMG elution, Orbitrap-like coalescence, precision and censoring, multi-run batches with class-specific drift.</li>
 </ul>""")

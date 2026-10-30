@@ -176,6 +176,7 @@ def relation_table(g, traces, p_min: float = 0.9, pad: int = 20, gate: float = 4
     k1, k2, n_pairs = precision + (0,) if precision is not None else fit_centre_precision(out)
     out["rt_se"] = centre_se(out, k1, k2)
     out.attrs["precision"] = dict(k1=k1, k2=k2, n_pairs=n_pairs)
+    out.attrs["sigma"] = sigma
     return out
 
 
